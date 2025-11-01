@@ -108,11 +108,11 @@ const GameArena = () => {
       title: "Shop",
       description: "Get exclusive gaming gear and merchandise from our store.",
     },
-    {
-      icon: "📊",
-      title: "Player Stats",
-      description: "Level up your gaming profile and unlock achievements.",
-    },
+    // {
+    //   icon: "📊",
+    //   title: "Player Stats",
+    //   description: "Level up your gaming profile and unlock achievements.",
+    // },
   ];
 
   const testimonials = [
