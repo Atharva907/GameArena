@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, getTransactionColor } from "@/lib/esportUtils";
 import { Trophy, ArrowUpRight, ArrowDownRight, CreditCard, Gift, Wallet } from "lucide-react";
