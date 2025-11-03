@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { NEWS_PAGE } from "@/routes/WebsiteRoute";
 import { tournamentsData } from "@/lib/data";
+import VideoBackground from "@/components/VideoBackground";
 
 const GameArena = () => {
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -166,28 +167,8 @@ const GameArena = () => {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background with animated particles */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-blue-900/20 to-indigo-900/20"></div>
-          <div className="absolute inset-0 bg-[url('/assets/hero-bg.jpg')] bg-cover bg-center opacity-40"></div>
-          {/* Animated particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute rounded-full bg-[#00FFAA] opacity-20 animate-pulse"
-                style={{
-                  width: Math.random() * 5 + 2 + "px",
-                  height: Math.random() * 5 + 2 + "px",
-                  top: Math.random() * 100 + "%",
-                  left: Math.random() * 100 + "%",
-                  animationDelay: Math.random() * 5 + "s",
-                  animationDuration: Math.random() * 10 + 10 + "s",
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        {/* Background with video */}
+        <VideoBackground />
 
         {/* Hero Content */}
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
