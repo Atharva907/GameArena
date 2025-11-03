@@ -1,5 +1,6 @@
 // Disable static generation for this page
 export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import dynamic from "next/dynamic";
 
