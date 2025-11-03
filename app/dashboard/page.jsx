@@ -1,16 +1,22 @@
-"use client";
+// Disable static generation for this page
+export const dynamic = "force-dynamic";
 
-import DashboardCard from "@/components/dashboard/DashboardCard";
-import QuickNavigation from "@/components/dashboard/QuickNavigation";
-import WalletCard from "@/components/dashboard/WalletCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Trophy, Gamepad2, TrendingUp, Users, Calendar, Wallet } from "lucide-react";
+import dynamic from "next/dynamic";
 
-export default function DashboardHome() {
+// Dynamically import the dashboard client component with SSR disabled
+const DashboardClient = dynamic(() => import("./DashboardClient"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+  ),
+});
+
+export default function DashboardPage() {
   return (
-    <div className="space-y-6 p-4 md:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen rounded-t-3xl">
+    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <DashboardClient />
       <div className="relative overflow-hidden pb-2">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 h-1 w-full"></div>
         <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text">Dashboard</h1>
