@@ -1,6 +1,7 @@
 import { connectToDatabase } from '@/lib/databaseConnection';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 
 
 // Get all products
@@ -24,6 +25,13 @@ export async function GET(request) {
     
     console.log('Connecting to database...');
     await connectToDatabase();
+    
+    // 确保连接已建立
+    if (mongoose.connection.readyState !== 1) {
+      console.error("Database not properly connected, state:", mongoose.connection.readyState);
+      throw new Error("Database connection not ready");
+    }
+    
     console.log('Database connected successfully');
     
     // Set response headers
