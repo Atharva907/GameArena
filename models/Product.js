@@ -16,9 +16,9 @@ const productSchema = new mongoose.Schema({
     min: 0
   },
   category: {
-    type: String,
-    required: true,
-    enum: ['gaming-gear', 'merchandise', 'digital-items', 'accessories']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
   },
   image: {
     type: String,
@@ -48,4 +48,5 @@ productSchema.pre('save', function(next) {
   next();
 });
 
-export default mongoose.model('Product', productSchema);
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
+export default Product;

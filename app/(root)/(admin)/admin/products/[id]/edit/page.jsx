@@ -3,7 +3,8 @@ import ProductForm from '../../ProductForm';
 
 async function getProduct(id) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/products/${id}`, { cache: 'no-store' });
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/products/${id}`, { cache: "no-store" });
 
     if (!res.ok) {
       return null;
@@ -17,7 +18,8 @@ async function getProduct(id) {
 }
 
 export default async function EditProductPage({ params }) {
-  const productData = await getProduct(params.id);
+  const { id } = await params;
+  const productData = await getProduct(id);
 
   if (!productData) {
     notFound();

@@ -14,6 +14,7 @@ const MediaPage = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -29,9 +30,12 @@ const MediaPage = () => {
         }
         
         const data = await response.json();
-        // Transform the data to get the image URLs
-        const imageUrls = data.resources.map(img => img.secure_url);
-        setImages(imageUrls);
+        // Transform the data to get the image URLs and public IDs
+        const imageData = data.resources.map(img => ({
+          url: img.secure_url,
+          publicId: img.public_id
+        }));
+        setImages(imageData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -40,13 +44,44 @@ const MediaPage = () => {
     };
 
     fetchImages();
-  }, []);
+  }, [refreshKey]);
+
+  // Function to handle image deletion
+  const handleDeleteImage = async (publicId) => {
+    if (!window.confirm("Are you sure you want to delete this image?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/cloudinary/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ publicId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete image");
+      }
+
+      // Refresh the images list after successful deletion
+      setRefreshKey(prev => prev + 1);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Function to handle image view
+  const handleViewImage = (url) => {
+    window.open(url, "_blank");
+  };
 
   return (
     <div className="space-y-4">
       <BreadCrumb breadcrumbData={breadcrumbData} />
       <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm">
-        <UploadMedia />
+        <UploadMedia onUploadSuccess={() => setRefreshKey(prev => prev + 1)} />
       </div>
       
       <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm">
@@ -70,13 +105,23 @@ const MediaPage = () => {
             {images.map((image, index) => (
               <div key={index} className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                 <img 
-                  src={image} 
+                  src={image.url} 
                   alt={`Cloudinary image ${index + 1}`} 
                   className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <button className="bg-white text-gray-800 px-2 py-1 rounded text-sm font-medium hover:bg-gray-100 mr-2">View</button>
-                  <button className="bg-red-500 text-white px-2 py-1 rounded text-sm font-medium hover:bg-red-600">Delete</button>
+                  <button 
+                    onClick={() => handleViewImage(image.url)}
+                    className="bg-white text-gray-800 px-2 py-1 rounded text-sm font-medium hover:bg-gray-100 mr-2"
+                  >
+                    View
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteImage(image.publicId)}
+                    className="bg-red-500 text-white px-2 py-1 rounded text-sm font-medium hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}

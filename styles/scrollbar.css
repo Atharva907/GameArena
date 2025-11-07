@@ -1,0 +1,39 @@
+/* Fix admin layout scrollbar position */
+.admin-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-sidebar {
+  flex-shrink: 0;
+  width: 256px; /* Adjust this to match your actual sidebar width */
+  margin: 0;
+  padding: 0;
+}
+
+.admin-content {
+  flex: 1;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  width: auto; /* Let flexbox handle the width */
+}
+
+/* Make sure content fills the entire available space */
+.admin-content > div {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reset any default margins/paddings that might be causing the space */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}

@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/databaseConnection';
 import Product from '@/models/Product';
+import Category from '@/models/Category';
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 
@@ -60,6 +61,7 @@ export async function GET(request) {
     console.log('Fetching products from database...');
     
     const products = await Product.find(query)
+      .populate('category')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);

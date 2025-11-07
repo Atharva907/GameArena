@@ -19,23 +19,40 @@ const ShopPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('grid');
+  const [categories, setCategories] = useState([
+    { value: 'all', label: 'All Categories' }
+  ]);
 
   useEffect(() => {
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
     filterAndSortProducts();
   }, [products, searchTerm, selectedCategory, sortBy]);
 
-  const fetchProducts = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/products');
-      const data = await response.json();
-      setProducts(data.products || []);
+
+      // Fetch products
+      const productsResponse = await fetch('/api/products');
+      const productsData = await productsResponse.json();
+      setProducts(productsData.products || []);
+
+      // Fetch categories
+      const categoriesResponse = await fetch('/api/categories');
+      const categoriesData = await categoriesResponse.json();
+
+      if (categoriesData.success) {
+        const dynamicCategories = categoriesData.categories.map(cat => ({
+          value: cat._id,
+          label: cat.name
+        }));
+        setCategories([{ value: 'all', label: 'All Categories' }, ...dynamicCategories]);
+      }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -54,7 +71,11 @@ const ShopPage = () => {
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      result = result.filter(product => product.category === selectedCategory);
+      result = result.filter(product => {
+        // Handle both string ID and object with _id
+        const categoryId = product.category._id || product.category;
+        return categoryId === selectedCategory;
+      });
     }
 
     // Sort products
@@ -79,13 +100,7 @@ const ShopPage = () => {
     setFilteredProducts(result);
   };
 
-  const categories = [
-    { value: 'all', label: 'All Categories' },
-    { value: 'gaming-gear', label: 'Gaming Gear' },
-    { value: 'merchandise', label: 'Merchandise' },
-    { value: 'digital-items', label: 'Digital Items' },
-    { value: 'accessories', label: 'Accessories' }
-  ];
+  // Categories are now fetched dynamically from the API
 
   return (
     <CartProvider>

@@ -5,7 +5,7 @@ import { showToast } from "@/lib/showToast";
 import { CldUploadWidget } from "next-cloudinary";
 import { FaPlus } from "react-icons/fa";
 
-const UploadMedia = ({ isMultiple = true }) => {
+const UploadMedia = ({ isMultiple = true, onUploadSuccess }) => {
   const handleOnError = (error) => {
     const message =
       error?.message || error?.statusText || "Unknown Cloudinary upload error";
@@ -35,6 +35,11 @@ const UploadMedia = ({ isMultiple = true }) => {
         }
 
         showToast("success", mediaUploadResponse.message)
+        
+        // Call the callback to refresh the media library
+        if (onUploadSuccess) {
+          onUploadSuccess();
+        }
 
       } catch (error) {
         showToast("error", error.message)

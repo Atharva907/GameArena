@@ -78,16 +78,19 @@ const ResetPassword = () => {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center">
-      {/* Background Image */}
+      echo {/* Background Video */}
       <div className="absolute inset-0 -z-10">
-        <Image
-          src="/assets/images/bg-image.png"
-          alt="Background"
-          fill
-          priority
-          className="object-cover"
-        />
-      </div>
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src="/assets/angel-sage.3840x2160.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div> {">"} temp.txt
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/40 -z-10"></div>

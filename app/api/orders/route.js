@@ -1,4 +1,4 @@
-import { connectToDatabase } from '@/lib/db';
+import { connectDB } from '@/lib/databaseConnection';
 import Order from '@/models/Order';
 import Product from '@/models/Product';
 import Player from '@/models/Player';
@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 // Get all orders for a player
 export async function GET(request) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Set response headers
     const headers = {
@@ -63,7 +63,7 @@ export async function GET(request) {
 // Create a new order
 export async function POST(request) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Set response headers
     const headers = {

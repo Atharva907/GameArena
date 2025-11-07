@@ -1,34 +1,61 @@
-// Cloudinary configuration
-const cloudinary = require('cloudinary').v2;
+import { NextResponse } from 'next/server';
+import { v2 as cloudinary } from 'cloudinary';
 
-// Debug environment variables
-console.log("Environment variables check:");
-console.log("NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? "Set" : "Not set");
-console.log("NEXT_PUBLIC_CLOUDINARY_API_KEY:", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY ? "Set" : "Not set");
-console.log("CLOUDINARY_SECRET_KEY:", process.env.CLOUDINARY_SECRET_KEY ? "Set" : "Not set");
-
-// Configure Cloudinary with your credentials
+// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET_KEY
+  api_secret: process.env.CLOUDINARY_SECRET_KEY,
 });
 
-export async function GET() {
+export async function GET(request) {
   try {
-    // Fetch all image resources from Cloudinary
-    const result = await cloudinary.api.resources({
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const next_cursor = searchParams.get('next_cursor');
+    const max_results = searchParams.get('max_results') || 20;
+
+    // Build options for the API call
+    const options = {
+      max_results: parseInt(max_results),
       type: 'upload',
-      resource_type: 'image',
-      max_results: 100 // Adjust as needed
+      // Try without prefix first to see if there are any images at all
+      // prefix: 'gamearena',
+    };
+
+    if (next_cursor) {
+      options.next_cursor = next_cursor;
+    }
+
+    console.log('Cloudinary config:', {
+      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+    });
+    
+    console.log('Fetching images with options:', options);
+    
+    // Fetch images from Cloudinary
+    const result = await cloudinary.api.resources(options);
+    
+    console.log('Cloudinary response:', {
+      total_count: result.total_count,
+      resources_count: result.resources?.length || 0,
     });
 
-    // Return the resources
-    return Response.json(result);
+    return NextResponse.json({
+      success: true,
+      resources: result.resources,
+      next_cursor: result.next_cursor,
+      total_count: result.total_count,
+    });
   } catch (error) {
-    console.error('Error fetching Cloudinary resources:', error);
-    return Response.json(
-      { error: 'Failed to fetch images from Cloudinary' },
+    console.error('Error fetching images from Cloudinary:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: 'Failed to fetch images from Cloudinary',
+        error: error.message 
+      },
       { status: 500 }
     );
   }
