@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ProductCard from '@/components/ui/ProductCard';
-import { CartIcon, CartProvider } from '@/components/ui/Cart';
+import { CartIcon } from '@/components/ui/Cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,8 @@ import { Search, ShoppingCart, Filter, Grid, List } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 
-const ShopPage = () => {
+const ShopPageContent = () => {
+
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +74,7 @@ const ShopPage = () => {
     if (selectedCategory !== 'all') {
       result = result.filter(product => {
         // Handle both string ID and object with _id
+        if (!product.category) return false;
         const categoryId = product.category._id || product.category;
         return categoryId === selectedCategory;
       });
@@ -99,12 +101,9 @@ const ShopPage = () => {
 
     setFilteredProducts(result);
   };
-
-  // Categories are now fetched dynamically from the API
-
+  
   return (
-    <CartProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-slate-800/80 backdrop-blur-md border-b border-slate-700">
           <div className="container mx-auto px-4 py-4">
@@ -116,8 +115,8 @@ const ShopPage = () => {
                 <span className="text-gray-400">/</span>
                 <h1 className="text-xl font-bold text-white">Shop</h1>
               </div>
-              <div className="flex items-center gap-2">
-                <CartIcon />
+              <div className="flex items-center gap-5">
+                <CartIcon/>
                 <Link href="/auth/login">
                   <Button variant="outline" className="border-purple-500/50 text-purple-300 hover:bg-purple-600/20">
                     Login
@@ -189,21 +188,6 @@ const ShopPage = () => {
             </CardContent>
           </Card>
 
-          {/* Featured products banner */}
-          <Card className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-500/30 mb-8">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Featured Products</h2>
-                  <p className="text-gray-300">Check out our latest gaming gear and exclusive merchandise</p>
-                </div>
-                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 text-sm">
-                  New Arrivals
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Products */}
           {loading ? (
             <div className="flex justify-center items-center py-12">
@@ -240,8 +224,12 @@ const ShopPage = () => {
           )}
         </div>
       </div>
-    </CartProvider>
-  );
+    );
+};
+
+const ShopPage = () => {
+  console.log('ShopPage: Component rendering');
+  return <ShopPageContent />;
 };
 
 export default ShopPage;

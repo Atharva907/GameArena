@@ -1,250 +1,206 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, X, Plus, Minus, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import Link from 'next/link';
 
 const CartContext = createContext();
 
 export const useCart = () => {
+  console.log('useCart: Hook called');
   const context = useContext(CartContext);
   if (!context) {
+    console.error('useCart: Context not found, component is not wrapped in CartProvider');
     throw new Error('useCart must be used within a CartProvider');
   }
+  console.log('useCart: Context found with', context.cartItems.length, 'items');
   return context;
 };
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  console.log('CartProvider: Initializing provider at', new Date().toISOString());
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem('gameArenaCart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error parsing cart data:', error);
+  // Initialize cart state with localStorage data if available
+  const getInitialCart = () => {
+    console.log('CartProvider: Getting initial cart from localStorage');
+    if (typeof window !== 'undefined') {
+      const savedCart = localStorage.getItem('gameArenaCart');
+      console.log('CartProvider: localStorage content:', savedCart);
+
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          console.log('CartProvider: Successfully parsed initial cart items:', parsedCart);
+          return parsedCart;
+        } catch (error) {
+          console.error('CartProvider: Error parsing initial cart data:', error);
+          console.log('CartProvider: Clearing corrupted localStorage data');
+          localStorage.removeItem('gameArenaCart');
+        }
       }
     }
-  }, []);
+    console.log('CartProvider: No initial cart data found, returning empty array');
+    return [];
+  };
+
+  const [cartItems, setCartItems] = useState(getInitialCart);
+
+  // No need to load from localStorage on mount since we initialize state directly
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('gameArenaCart', JSON.stringify(cartItems));
+    console.log('CartProvider: useEffect triggered for saving cart items');
+    console.log('CartProvider: Current cart items:', cartItems);
+    console.log('CartProvider: Cart items count:', cartItems.length);
+
+    if (cartItems.length > 0) {
+      console.log('CartProvider: Saving non-empty cart to localStorage');
+      localStorage.setItem('gameArenaCart', JSON.stringify(cartItems));
+      console.log('CartProvider: Cart saved to localStorage');
+    } else {
+      console.log('CartProvider: Cart is empty, checking if we should clear localStorage');
+      const savedCart = localStorage.getItem('gameArenaCart');
+      if (savedCart) {
+        console.log('CartProvider: Clearing empty cart from localStorage');
+        localStorage.removeItem('gameArenaCart');
+      }
+    }
   }, [cartItems]);
 
   const addToCart = (product, quantity = 1) => {
+    console.log('CartProvider: addToCart called with product:', product.name, 'quantity:', quantity);
+
     setCartItems(prevItems => {
+      console.log('CartProvider: Current cart items before adding:', prevItems);
       const existingItem = prevItems.find(item => item._id === product._id);
 
+      let updatedItems;
       if (existingItem) {
-        return prevItems.map(item =>
+        console.log('CartProvider: Product already exists in cart, updating quantity');
+        updatedItems = prevItems.map(item =>
           item._id === product._id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        return [...prevItems, { ...product, quantity }];
+        console.log('CartProvider: Adding new product to cart');
+        updatedItems = [...prevItems, { ...product, quantity }];
       }
+
+      console.log('CartProvider: Updated cart items:', updatedItems);
+      return updatedItems;
     });
   };
 
   const removeFromCart = (productId) => {
-    setCartItems(prevItems => prevItems.filter(item => item._id !== productId));
+    console.log('CartProvider: removeFromCart called with productId:', productId);
+
+    setCartItems(prevItems => {
+      console.log('CartProvider: Current cart items before removing:', prevItems);
+      const itemToRemove = prevItems.find(item => item._id === productId);
+
+      if (itemToRemove) {
+        console.log('CartProvider: Removing item from cart:', itemToRemove.name);
+      } else {
+        console.log('CartProvider: Item not found in cart with ID:', productId);
+      }
+
+      const updatedItems = prevItems.filter(item => item._id !== productId);
+      console.log('CartProvider: Updated cart items after removal:', updatedItems);
+      return updatedItems;
+    });
   };
 
   const updateQuantity = (productId, quantity) => {
+    console.log('CartProvider: updateQuantity called with productId:', productId, 'quantity:', quantity);
+
     if (quantity <= 0) {
+      console.log('CartProvider: Quantity is 0 or less, removing item from cart');
       removeFromCart(productId);
     } else {
-      setCartItems(prevItems =>
-        prevItems.map(item =>
+      setCartItems(prevItems => {
+        console.log('CartProvider: Current cart items before updating quantity:', prevItems);
+        const itemToUpdate = prevItems.find(item => item._id === productId);
+
+        if (itemToUpdate) {
+          console.log('CartProvider: Updating quantity for item:', itemToUpdate.name, 'from', itemToUpdate.quantity, 'to', quantity);
+        } else {
+          console.log('CartProvider: Item not found in cart with ID:', productId);
+        }
+
+        const updatedItems = prevItems.map(item =>
           item._id === productId ? { ...item, quantity } : item
-        )
-      );
+        );
+
+        console.log('CartProvider: Updated cart items after quantity change:', updatedItems);
+        return updatedItems;
+      });
     }
   };
 
   const clearCart = () => {
-    setCartItems([]);
+    console.log('CartProvider: clearCart called');
+    setCartItems(prevItems => {
+      console.log('CartProvider: Current cart items before clearing:', prevItems);
+      console.log('CartProvider: Clearing all items from cart');
+      return [];
+    });
   };
 
   const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    const total = cartItems.reduce((total, item) => total + item.quantity, 0);
+    console.log('CartProvider: getTotalItems calculated:', total, 'from', cartItems.length, 'items');
+    return total;
   };
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    const total = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    console.log('CartProvider: getTotalPrice calculated:', total, 'from', cartItems.length, 'items');
+    return total;
   };
 
+  const contextValue = {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getTotalItems,
+    getTotalPrice,
+  };
+
+  console.log('CartProvider: Providing context with', cartItems.length, 'items');
+
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getTotalItems,
-        getTotalPrice,
-        setIsCartOpen,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </CartContext.Provider>
   );
 };
 
-const CartDrawer = ({ isOpen, onClose }) => {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
-
-  const handleCheckout = () => {
-    // Navigate to checkout page
-    window.location.href = '/shop/checkout';
-  };
-
-  return (
-    <div className={`fixed inset-0 z-50 ${isOpen ? 'block' : 'hidden'}`}>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50" 
-        onClick={onClose}
-      />
-
-      {/* Cart drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-slate-800 shadow-xl overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Shopping Cart
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* Cart content */}
-        {cartItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <ShoppingCart className="h-16 w-16 text-gray-500 mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">Your cart is empty</h3>
-            <p className="text-gray-400 mb-4">Add some products to get started</p>
-            <Button onClick={onClose} className="bg-gradient-to-r from-purple-600 to-pink-600">
-              Continue Shopping
-            </Button>
-          </div>
-        ) : (
-          <>
-            {/* Cart items */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {cartItems.map(item => (
-                <Card key={item._id} className="bg-slate-700 border-slate-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-slate-600">
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-white">{item.name}</h4>
-                        <p className="text-sm text-gray-400">{formatCurrency(item.price)}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7 border-slate-600 text-white hover:bg-slate-600"
-                              onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="text-sm w-8 text-center">{item.quantity}</span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7 border-slate-600 text-white hover:bg-slate-600"
-                              onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-gray-400 hover:text-red-400"
-                            onClick={() => removeFromCart(item._id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Cart footer */}
-            <div className="border-t border-slate-700 p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Subtotal</span>
-                <span className="text-xl font-bold text-white">{formatCurrency(getTotalPrice())}</span>
-              </div>
-              <Separator className="bg-slate-700" />
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-slate-600 text-white hover:bg-slate-700"
-                  onClick={clearCart}
-                >
-                  Clear Cart
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  onClick={handleCheckout}
-                >
-                  Checkout
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
 export const CartIcon = () => {
-  const { getTotalItems, setIsCartOpen } = useCart();
+  console.log('CartIcon: Component rendering');
+  const { getTotalItems } = useCart();
   const totalItems = getTotalItems();
+  console.log('CartIcon: Total items in cart:', totalItems);
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="relative text-white"
-      onClick={() => setIsCartOpen(true)}
-    >
-      <ShoppingCart className="h-5 w-5" />
-      {totalItems > 0 && (
-        <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-purple-600">
-          {totalItems > 99 ? '99+' : totalItems}
-        </Badge>
-      )}
-    </Button>
+    <Link href="/shop/cart">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative text-white"
+      >
+        <ShoppingCart className="h-5 w-5" />
+        {totalItems > 0 && (
+          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-purple-600">
+            {totalItems > 99 ? '99+' : totalItems}
+          </Badge>
+        )}
+      </Button>
+    </Link>
   );
 };

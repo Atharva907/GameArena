@@ -7,11 +7,19 @@ import { formatCurrency } from '@/lib/utils';
 import { useCart } from '@/components/ui/Cart';
 
 const ProductCard = ({ product }) => {
-  const { addToCart, setIsCartOpen } = useCart();
+  console.log('ProductCard: Component rendering for product:', product.name);
+  const { addToCart } = useCart();
 
   const handleAddToCart = () => {
+    console.log('ProductCard: Add to cart clicked for product:', product.name);
+    console.log('ProductCard: Product details:', JSON.stringify(product));
+
+    // Check if localStorage has cart data
+    const savedCart = typeof window !== 'undefined' ? localStorage.getItem('gameArenaCart') : null;
+    console.log('ProductCard: localStorage content before adding:', savedCart);
+
     addToCart(product);
-    setIsCartOpen(true);
+    console.log('ProductCard: Product added to cart:', product.name);
   };
 
   return (

@@ -8,13 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CartProvider, useCart } from '@/components/ui/Cart';
+import { useCart } from '@/components/ui/Cart';
 import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 const CheckoutContent = () => {
+  console.log('CheckoutContent: Component rendering');
   const { cartItems, getTotalPrice, clearCart } = useCart();
+  console.log('CheckoutContent: Cart items count:', cartItems.length);
+  console.log('CheckoutContent: Cart items:', cartItems);
   const { auth } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,9 +37,11 @@ const CheckoutContent = () => {
   };
 
   const handleSubmit = async (e) => {
+    console.log('CheckoutContent: Submitting order');
     e.preventDefault();
 
     if (!auth || !auth.email) {
+      console.log('CheckoutContent: User not authenticated, redirecting to login');
       router.push('/auth/login');
       return;
     }
@@ -48,6 +53,9 @@ const CheckoutContent = () => {
         productId: item._id,
         quantity: item.quantity
       }));
+
+      console.log('CheckoutContent: Order items:', orderItems);
+      console.log('CheckoutContent: Shipping address:', shippingAddress);
 
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -63,10 +71,13 @@ const CheckoutContent = () => {
 
       if (response.ok) {
         const order = await response.json();
+        console.log('CheckoutContent: Order created successfully:', order);
         clearCart();
+        console.log('CheckoutContent: Cart cleared, redirecting to orders page');
         router.push(`/dashboard/orders?success=${order._id}`);
       } else {
         const errorData = await response.json();
+        console.error('CheckoutContent: Order failed:', errorData);
         alert(`Order failed: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
@@ -235,25 +246,25 @@ const CheckoutContent = () => {
 };
 
 const CheckoutPage = () => {
+  console.log('CheckoutPage: Component rendering');
+  console.log('CheckoutPage: Page loaded at', new Date().toISOString());
   return (
-    <CartProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-slate-800/80 backdrop-blur-md border-b border-slate-700">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <Link href="/shop" className="text-xl font-bold text-white">
-                GameArena
-              </Link>
-              <span className="text-gray-400">/</span>
-              <h1 className="text-xl font-bold text-white">Checkout</h1>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-slate-800/80 backdrop-blur-md border-b border-slate-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Link href="/shop" className="text-xl font-bold text-white">
+              GameArena
+            </Link>
+            <span className="text-gray-400">/</span>
+            <h1 className="text-xl font-bold text-white">Checkout</h1>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <CheckoutContent />
-      </div>
-    </CartProvider>
+      <CheckoutContent />
+    </div>
   );
 };
 
