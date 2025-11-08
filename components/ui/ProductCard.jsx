@@ -43,10 +43,6 @@ const ProductCard = ({ product }) => {
           <h3 className="font-semibold text-lg text-white group-hover:text-purple-400 transition-colors">
             {product.name}
           </h3>
-          <div className="flex items-center gap-1 text-sm text-yellow-400">
-            <Star className="h-4 w-4 fill-current" />
-            <span>4.5</span>
-          </div>
         </div>
         <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.description}</p>
         <div className="flex items-center justify-between">
