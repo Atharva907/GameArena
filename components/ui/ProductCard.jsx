@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Check } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useCart } from '@/components/ui/Cart';
 
 const ProductCard = ({ product }) => {
   console.log('ProductCard: Component rendering for product:', product.name);
   const { addToCart } = useCart();
+  const [isAdded, setIsAdded] = useState(false);
 
   const handleAddToCart = () => {
     console.log('ProductCard: Add to cart clicked for product:', product.name);
@@ -20,6 +21,19 @@ const ProductCard = ({ product }) => {
 
     addToCart(product);
     console.log('ProductCard: Product added to cart:', product.name);
+    
+    // Set button to "Added" state
+    setIsAdded(true);
+    
+    // Reset button state after 2 seconds
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
+  };
+
+  // Custom formatter for Indian Rupee
+  const formatINR = (amount) => {
+    return `₹${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
   };
 
   return (
@@ -54,15 +68,28 @@ const ProductCard = ({ product }) => {
         </div>
         <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.description}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-white">{formatCurrency(product.price)}</span>
+          <span className="text-xl font-bold text-white">{formatINR(product.price)}</span>
           <Button
             size="sm"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            disabled={product.inStock === 0}
+            className={`${
+              isAdded 
+                ? "bg-green-600 hover:bg-green-700" 
+                : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            } transition-all duration-300`}
+            disabled={product.inStock === 0 || isAdded}
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="h-4 w-4 mr-1" />
-            Add
+            {isAdded ? (
+              <>
+                <Check className="h-4 w-4 mr-1" />
+                Added
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-4 w-4 mr-1" />
+                Add
+              </>
+            )}
           </Button>
         </div>
       </CardContent>
