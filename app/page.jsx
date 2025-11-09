@@ -187,41 +187,70 @@ const GameArena = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10">
+      <section className="min-h-[50vh] py-20 px-4 md:px-8 lg:px-16 relative z-10 overflow-hidden flex flex-col justify-center">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
-            Why Choose GameArena
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Section Title with Enhanced Styling */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
+              Why Choose GameArena
+            </h2>
+          </div>
+          
+          {/* Feature Cards with Enhanced Design */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             {features.map((feature, index) => (
-              <Card
+              <div
                 key={index}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:-translate-y-2 rounded-xl overflow-hidden"
+                className="relative group"
               >
-                <CardContent className="p-8 text-center">
-                  <div className="text-5xl mb-4">{feature.icon}</div>
-                  <h3 className="text-2xl font-bold mb-4 text-[#00FFAA]">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-300">{feature.description}</p>
-                </CardContent>
-              </Card>
+                {/* Background Glow Effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#00FFAA]/20 to-[#4F46E5]/20 rounded-xl blur-lg group-hover:from-[#00FFAA]/40 group-hover:to-[#4F46E5]/40 transition-all duration-500"></div>
+                
+                {/* Card Container */}
+                <Card className="relative bg-[#121C2B]/50 backdrop-blur-lg border border-white/10 hover:border-[#00FFAA]/30 transition-all duration-500 rounded-xl overflow-hidden h-full transform hover:-translate-y-3 group-hover:shadow-[0_20px_40px_-10px_rgba(79,70,229,0.3)]">
+                  <CardContent className="p-8 text-center flex flex-col h-full justify-between">
+                    {/* Icon with Animated Background */}
+                    <div className="relative mx-auto mb-6 w-20 h-20 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#00FFAA]/20 to-[#4F46E5]/20 rounded-full blur-xl group-hover:from-[#00FFAA]/30 group-hover:to-[#4F46E5]/30 transition-all duration-500"></div>
+                      <div className="relative text-5xl transform group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+                    </div>
+                    
+                    {/* Title with Gradient Text */}
+                    <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent group-hover:from-[#00FFAA] group-hover:to-[#9333EA] transition-all duration-300">
+                      {feature.title}
+                    </h3>
+                    
+                    {/* Description */}
+                    <p className="text-gray-300 leading-relaxed group-hover:text-white transition-colors duration-300">
+                      {feature.description}
+                    </p>
+                    
+                    {/* Decorative Element */}
+                    <div className="mt-6 w-full h-1 bg-gradient-to-r from-transparent via-[#4F46E5]/50 to-transparent rounded-full"></div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10">
+      <section className="py-10 px-4 md:px-8 lg:px-16 relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
-            How It Works
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] transform -translate-y-1/2 z-0"></div>
+          {/* Enhanced Section Title */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
+              How It Works
+            </h2>
+          </div>
+          
+          {/* Steps Container */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
+            {/* Enhanced Connecting Line */}
+            <div className="hidden md:block absolute top-1/2 left-[16.66%] right-[16.66%] h-1 bg-gradient-to-r from-[#00FFAA]/30 via-[#4F46E5]/50 to-[#00FFAA]/30 transform -translate-y-1/2 z-0 rounded-full shadow-[0_0_10px_rgba(79,70,229,0.3)]"></div>
 
-            {/* Steps */}
+            {/* Enhanced Steps */}
             {[
               { title: "Sign Up / Login", icon: "🎮" },
               { title: "Join Tournaments", icon: "🏆" },
@@ -229,12 +258,23 @@ const GameArena = () => {
             ].map((step, index) => (
               <div
                 key={index}
-                className="relative z-10 flex flex-col items-center text-center"
+                className="relative z-10 flex flex-col items-center text-center group"
               >
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] flex items-center justify-center text-3xl mb-4 shadow-[0_0_20px_rgba(0,255,170,0.5)]">
-                  {step.icon}
+                {/* Enhanced Icon Circle */}
+                <div className="relative mb-6 group-hover:scale-105 transition-transform duration-300">
+                  {/* Glow Effect */}
+                  <div className="absolute -inset-2 bg-gradient-to-r from-[#00FFAA]/20 to-[#4F46E5]/20 rounded-full blur-xl group-hover:from-[#00FFAA]/40 group-hover:to-[#4F46E5]/40 transition-all duration-500"></div>
+                  
+                  {/* Main Circle */}
+                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#00FFAA] to-[#4F46E5] flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(0,255,170,0.4)] group-hover:shadow-[0_0_30px_rgba(0,255,170,0.6)] transition-all duration-300">
+                    {step.icon}
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold">{step.title}</h3>
+                
+                {/* Step Title */}
+                <h3 className="text-xl font-bold bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent group-hover:from-[#00FFAA] group-hover:to-[#9333EA] transition-all duration-300">
+                  {step.title}
+                </h3>
               </div>
             ))}
           </div>
@@ -242,76 +282,108 @@ const GameArena = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10">
+      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
-            What Players Say
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Enhanced Section Title */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
+              What Players Say
+            </h2>
+          </div>
+          
+          {/* Enhanced Testimonials Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             {testimonials.map((testimonial, index) => (
-              <Card
+              <div
                 key={index}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 rounded-xl overflow-hidden"
+                className="relative group"
               >
-                <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="text-5xl mb-4">{testimonial.avatar}</div>
-                  <p className="text-gray-300 mb-4 italic">
-                    "{testimonial.quote}"
-                  </p>
-                  <h3 className="text-lg font-bold text-[#00FFAA]">
-                    {testimonial.name}
-                  </h3>
-                </CardContent>
-              </Card>
+                {/* Background Glow Effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#00FFAA]/10 to-[#4F46E5]/10 rounded-xl blur-lg group-hover:from-[#00FFAA]/20 group-hover:to-[#4F46E5]/20 transition-all duration-500"></div>
+                
+                {/* Card Container */}
+                <Card className="relative bg-[#121C2B]/50 backdrop-blur-lg border border-white/10 hover:border-[#00FFAA]/30 transition-all duration-500 rounded-xl overflow-hidden h-full transform hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-10px_rgba(79,70,229,0.3)]">
+                  <CardContent className="p-8 flex flex-col items-center text-center h-full justify-between">
+                    {/* Avatar with Enhanced Styling */}
+                    <div className="relative mb-6">
+                      {/* Glow Effect */}
+                      <div className="absolute -inset-3 bg-gradient-to-r from-[#00FFAA]/20 to-[#4F46E5]/20 rounded-full blur-xl group-hover:from-[#00FFAA]/30 group-hover:to-[#4F46E5]/30 transition-all duration-500"></div>
+                      
+                      {/* Avatar */}
+                      <div className="relative text-5xl transform group-hover:scale-110 transition-transform duration-300">{testimonial.avatar}</div>
+                    </div>
+                    
+                    {/* Quote with Enhanced Styling */}
+                    <div className="relative mb-6 flex-grow flex items-center">
+                      <div className="absolute -top-2 -left-2 text-3xl text-[#4F46E5]/20">"</div>
+                      <p className="text-gray-300 italic leading-relaxed px-4 group-hover:text-white transition-colors duration-300">
+                        {testimonial.quote}
+                      </p>
+                      <div className="absolute -bottom-2 -right-2 text-3xl text-[#4F46E5]/20">"</div>
+                    </div>
+                    
+                    {/* Name with Gradient Text */}
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent group-hover:from-[#00FFAA] group-hover:to-[#9333EA] transition-all duration-300">
+                      {testimonial.name}
+                    </h3>
+                    
+                    {/* Decorative Element */}
+                    <div className="mt-4 w-full h-1 bg-gradient-to-r from-transparent via-[#4F46E5]/50 to-transparent rounded-full"></div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Upcoming Tournaments Section */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
+      <section className="min-h-[70vh] py-12 px-4 sm:px-6 md:px-8 lg:px-16 relative z-10">
+        <div className="max-w-7xl mx-auto h-full flex flex-col">
+          <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Upcoming Tournaments
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {tournaments.map((tournament, index) => (
               <Card
                 key={tournament._id || index}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:-translate-y-2"
+                className="bg-gradient-to-br from-[#1A1A2E]/80 to-[#0F172A]/80 backdrop-blur-md border border-white/10 hover:border-[#00FFAA]/30 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_30px_rgba(0,255,170,0.3)] hover:-translate-y-1 group"
               >
-                <div className="h-48 bg-gradient-to-br from-purple-900/30 to-blue-900/30 flex items-center justify-center text-6xl">
-                  🎮
+                <div className="h-32 sm:h-40 md:h-48 bg-gradient-to-br from-purple-900/40 via-blue-900/30 to-indigo-900/40 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="text-4xl sm:text-5xl md:text-6xl group-hover:scale-110 transition-transform duration-300">
+                    🎮
+                  </div>
                 </div>
-                <CardContent className="p-6">
-                  <h3 className="text-2xl font-bold mb-2 text-[#00FFAA]">
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 text-[#00FFAA] truncate">
                     {tournament.name}
                   </h3>
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Game:</span>
-                      <span>{tournament.game}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">Game:</span>
+                      <span className="text-xs sm:text-sm truncate max-w-[50%]">{tournament.game}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Date:</span>
-                      <span>{tournament.startDate} - {tournament.endDate}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">Date:</span>
+                      <span className="text-xs sm:text-sm">{tournament.startDate} - {tournament.endDate}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Prize Pool:</span>
-                      <span className="font-bold text-[#9333EA]">
+                      <span className="text-gray-400 text-xs sm:text-sm">Prize:</span>
+                      <span className="font-bold text-[#9333EA] text-xs sm:text-sm">
                         {tournament.prize}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Time:</span>
-                      <span>{tournament.startTime} - {tournament.endTime}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">Time:</span>
+                      <span className="text-xs sm:text-sm">{tournament.startTime} - {tournament.endTime}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Players:</span>
-                      <span>{tournament.currentParticipants}/{tournament.maxParticipants}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">Players:</span>
+                      <span className="text-xs sm:text-sm">{tournament.currentParticipants}/{tournament.maxParticipants}</span>
                     </div>
                   </div>
-                  <Button className="w-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300">
+                  <Button className="w-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300 text-sm sm:text-base">
                     Register Now
                   </Button>
                 </CardContent>
@@ -322,53 +394,68 @@ const GameArena = () => {
       </section>
 
       {/* Featured Games Section */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
+      <section className="min-h-[70vh] py-10 px-4 sm:px-6 md:px-8 lg:px-16 relative z-10">
+        <div className="max-w-7xl mx-auto h-full flex flex-col">
+          <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Featured Games
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {[
               {
                 name: "BGMI",
                 category: "Battle Royale",
-                icon: "🎯",
+                image: "/assets/images/games/bgmi.jpg",
                 players: "5.2M",
               },
               {
                 name: "Call of Duty (COD)",
                 category: "FPS",
-                icon: "⚔️",
+                image: "/assets/images/games/cod.jpg",
                 players: "4.8M",
               },
               {
                 name: "Free Fire",
                 category: "Battle Royale",
-                icon: "🔥",
+                image: "/assets/images/games/freefire.jpg",
                 players: "6.1M",
               },
               {
                 name: "Valorant",
                 category: "Tactical Shooter",
-                icon: "🎮",
+                image: "/assets/images/games/valorant.webp",
                 players: "3.9M",
               },
             ].map((game, index) => (
               <Card
                 key={index}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:-translate-y-2 group cursor-pointer"
+                className="bg-gradient-to-br from-[#1A1A2E]/80 to-[#0F172A]/80 backdrop-blur-md border border-white/10 hover:border-[#00FFAA]/30 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_30px_rgba(0,255,170,0.3)] hover:-translate-y-1 group cursor-pointer"
               >
-                <div className="h-32 bg-gradient-to-br from-purple-900/30 to-blue-900/30 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform duration-300">
-                  {game.icon}
+                <div className="h-32 sm:h-40 md:h-48 bg-gradient-to-br from-purple-900/40 via-blue-900/30 to-indigo-900/40 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <img 
+                    src={game.image} 
+                    alt={game.name}
+                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    onError={(e) => {
+                      e.target.onerror = null; 
+                      e.target.src = "/assets/images/games/placeholder.jpg";
+                    }}
+                  />
                 </div>
-                <CardContent className="p-6 text-center">
-                  <h3 className="text-xl font-bold mb-2 text-[#00FFAA]">
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 text-[#00FFAA] truncate">
                     {game.name}
                   </h3>
-                  <p className="text-gray-400 mb-2">{game.category}</p>
-                  <p className="text-sm text-gray-500">
-                    {game.players} players
-                  </p>
+                  <div className="space-y-1 sm:space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-xs sm:text-sm">Category:</span>
+                      <span className="text-xs sm:text-sm">{game.category}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 text-xs sm:text-sm">Players:</span>
+                      <span className="text-xs sm:text-sm font-bold text-[#9333EA]">{game.players}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -419,7 +506,7 @@ const GameArena = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {[
             {
-              game: "Cyber Strike",
+              game: "Counter Strike 2",
               status: "Quarter Finals",
               prize: "$10,000",
               viewers: "12.5K",
@@ -427,7 +514,7 @@ const GameArena = () => {
               icon: "🎮",
             },
             {
-              game: "Battle Legends",
+              game: "BGMI",
               status: "Semi Finals",
               prize: "$25,000",
               viewers: "18.3K",
@@ -435,11 +522,11 @@ const GameArena = () => {
               icon: "⚔️",
             },
             {
-              game: "Racing Thunder",
+              game: "Valorant",
               status: "Finals",
               prize: "$15,000",
               viewers: "22.1K",
-              participants: "2 Racers",
+              participants: "2 Teams",
               icon: "🏁",
             },
           ].map((tournament, index) => (
@@ -499,7 +586,7 @@ const GameArena = () => {
       {/* Featured Products Section */}
       <section className="py-20 px-4 bg-gradient-to-b from-black/50 to-black/30">
         <div className="max-w-7xl mx-auto mb-8">
-          <h2 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Featured Products
           </h2>
         </div>
