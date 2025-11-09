@@ -282,7 +282,7 @@ const GameArena = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10 overflow-hidden">
+      <section className="py-10 px-4 md:px-8 lg:px-16 relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Section Title */}
           <div className="text-center mb-16">
@@ -584,7 +584,7 @@ const GameArena = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-black/50 to-black/30">
+      <section className="py-10 px-4 bg-gradient-to-b from-black/50 to-black/30">
         <div className="max-w-7xl mx-auto mb-8">
           <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Featured Products
