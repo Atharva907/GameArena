@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Star, Check } from 'lucide-react';
+import { ShoppingCart, Star, Check, Eye } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useCart } from '@/components/ui/Cart';
+import Link from 'next/link';
 
 const ProductCard = ({ product }) => {
   console.log('ProductCard: Component rendering for product:', product.name);
@@ -67,13 +68,13 @@ const ProductCard = ({ product }) => {
           </h3>
         </div>
         <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.description}</p>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <span className="text-xl font-bold text-white">{formatINR(product.price)}</span>
           <Button
             size="sm"
             className={`${
-              isAdded 
-                ? "bg-green-600 hover:bg-green-700" 
+              isAdded
+                ? "bg-green-600 hover:bg-green-700"
                 : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             } transition-all duration-300`}
             disabled={product.inStock === 0 || isAdded}
@@ -92,6 +93,17 @@ const ProductCard = ({ product }) => {
             )}
           </Button>
         </div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="w-full border-purple-500/50 text-purple-300 hover:bg-purple-600/20"
+        >
+          <Link href={`/shop/${product._id}`}>
+            <Eye className="h-4 w-4 mr-1" />
+            View Details
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );

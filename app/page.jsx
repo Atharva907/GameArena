@@ -338,7 +338,7 @@ const GameArena = () => {
       </section>
 
       {/* Upcoming Tournaments Section */}
-      <section className="min-h-[70vh] py-12 px-4 sm:px-6 md:px-8 lg:px-16 relative z-10">
+      <section className="min-h-[70vh] px-4 sm:px-6 md:px-8 lg:px-16 relative z-10">
         <div className="max-w-7xl mx-auto h-full flex flex-col">
           <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Upcoming Tournaments
@@ -394,7 +394,7 @@ const GameArena = () => {
       </section>
 
       {/* Featured Games Section */}
-      <section className="min-h-[70vh] py-10 px-4 sm:px-6 md:px-8 lg:px-16 relative z-10">
+      <section className="min-h-[70vh] px-4 sm:px-6 md:px-8 lg:px-16 relative z-10">
         <div className="max-w-7xl mx-auto h-full flex flex-col">
           <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Featured Games
@@ -464,9 +464,9 @@ const GameArena = () => {
       </section>
 
       {/* Live Tournaments Panel */}
-      <section className="py-12 px-4 md:px-8 lg:px-16 relative z-10 bg-gradient-to-b from-transparent to-[#121C2B]/50">
+      <section className="px-4 py-10 md:px-8 lg:px-16 relative z-10 bg-gradient-to-b from-transparent to-[#121C2B]/50">
         <div className="max-w-7xl mx-auto mb-8">
-          <h2 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
+          <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Live Tournaments
           </h2>
         </div>
@@ -511,7 +511,7 @@ const GameArena = () => {
               prize: "$10,000",
               viewers: "12.5K",
               participants: "8 Teams",
-              icon: "🎮",
+              image: "/assets/images/games/cs2.jpg",
             },
             {
               game: "BGMI",
@@ -519,7 +519,7 @@ const GameArena = () => {
               prize: "$25,000",
               viewers: "18.3K",
               participants: "4 Teams",
-              icon: "⚔️",
+              image: "/assets/images/games/bgmi2.jpg",
             },
             {
               game: "Valorant",
@@ -527,15 +527,23 @@ const GameArena = () => {
               prize: "$15,000",
               viewers: "22.1K",
               participants: "2 Teams",
-              icon: "🏁",
+              image: "/assets/images/games/valorant2.jpg",
             },
           ].map((tournament, index) => (
             <Card
               key={index}
               className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:-translate-y-2"
             >
-              <div className="relative h-48 bg-gradient-to-br from-purple-900/30 to-blue-900/30 flex items-center justify-center text-6xl overflow-hidden">
-                {tournament.icon}
+              <div className="relative h-48 bg-gradient-to-br from-purple-900/30 to-blue-900/30 flex items-center justify-center overflow-hidden">
+                <img 
+                  src={tournament.image} 
+                  alt={tournament.game}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/assets/images/games/placeholder.jpg";
+                  }}
+                />
                 <div className="absolute top-4 right-4 flex items-center bg-red-500/20 backdrop-blur-sm rounded-full px-3 py-1 animate-pulse">
                   <span className="relative flex items-center mr-2">
                     <span className="absolute animate-ping inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75"></span>
@@ -584,66 +592,84 @@ const GameArena = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-10 px-4 bg-gradient-to-b from-black/50 to-black/30">
-        <div className="max-w-7xl mx-auto mb-8">
+      <section className="min-h-[70vh] py-12 px-4 sm:px-6 md:px-8 lg:px-16 relative z-10 bg-gradient-to-b from-black/50 to-black/30">
+        <div className="max-w-7xl mx-auto h-full flex flex-col">
           <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Featured Products
           </h2>
-        </div>
 
-        {featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {featuredProducts.map((product) => (
-              <Card
-                key={product._id}
-                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:-translate-y-2"
-              >
-                <div className="relative h-48 bg-gradient-to-br from-slate-900/30 to-slate-800/30 overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                  {product.isFeatured && (
-                    <div className="absolute top-4 left-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                      Featured
-                    </div>
-                  )}
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-white">{product.name}</h3>
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">{product.description}</p>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-2xl font-bold text-[#00FFAA]">${product.price}</span>
-                    <span className="text-sm text-gray-400">Stock: {product.inStock}</span>
+          {featuredProducts.length > 0 ? (
+            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {featuredProducts.map((product) => (
+                <Card
+                  key={product._id}
+                  className="bg-gradient-to-br from-[#1A1A2E]/80 to-[#0F172A]/80 backdrop-blur-md border border-white/10 hover:border-[#00FFAA]/30 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_30px_rgba(0,255,170,0.3)] hover:-translate-y-1 group h-full flex flex-col"
+                >
+                  <div className="relative h-40 sm:h-48 bg-gradient-to-br from-purple-900/40 via-blue-900/30 to-indigo-900/40 overflow-hidden">
+                    <div className="absolute inset-0 bg-black/10"></div>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/assets/images/products/placeholder.jpg";
+                      }}
+                    />
+                    {product.isFeatured && (
+                      <div className="absolute top-3 left-3 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] text-xs px-3 py-1 rounded-full font-bold shadow-lg">
+                        Featured
+                      </div>
+                    )}
                   </div>
-                  <Button
-                    asChild
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  >
-                    <Link href="/shop">View in Shop</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="max-w-7xl mx-auto text-center py-12">
-            <p className="text-gray-400 mb-6">No featured products available at the moment</p>
-            <Button
-              asChild
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            >
-              <Link href="/shop">Visit Shop</Link>
-            </Button>
-          </div>
-        )}
+                  <CardContent className="p-4 sm:p-6 flex-grow flex flex-col">
+                    <div className="flex-grow">
+                      <h3 className="text-lg sm:text-xl font-bold mb-2 text-[#00FFAA] truncate">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-300 text-xs sm:text-sm mb-4 line-clamp-2 flex-grow">
+                        {product.description}
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xl sm:text-2xl font-bold text-[#00FFAA]">₹ {product.price}</span>
+                        {product.inStock === 0 && (
+                          <span className="text-xs sm:text-sm text-red-500 font-bold">Out of Stock</span>
+                        )}
+                      </div>
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300 text-sm sm:text-base"
+                      >
+                        <Link href={`/shop/${product._id}`}>View Details</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex-grow flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🛍️</div>
+                <p className="text-gray-400 mb-6 text-lg">No featured products available at the moment</p>
+                <Button
+                  asChild
+                  className="bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 px-6 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300"
+                >
+                  <Link href="/shop">Visit Shop</Link>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Esports News & Updates */}
-      <section className="py-20 px-4 md:px-8 lg:px-16 relative z-10">
+      <section className="py-10 px-4 md:px-8 lg:px-16 relative z-10">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] bg-clip-text text-transparent">
+          <h2 className="text-center py-10 text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFAA] via-[#4F46E5] to-[#9333EA] bg-clip-text text-transparent animate-pulse">
             Latest Updates
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
