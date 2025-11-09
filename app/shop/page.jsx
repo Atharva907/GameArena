@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import ProductCard from '@/components/ui/ProductCardNew';
+import ProductCard from '@/components/ui/ProductCard';
 import { CartIcon } from '@/components/ui/Cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
