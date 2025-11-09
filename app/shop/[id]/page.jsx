@@ -85,10 +85,10 @@ const ProductDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-gray-200 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-          <p className="text-white">Loading product details...</p>
+          <p className="text-gray-800">Loading product details...</p>
         </div>
       </div>
     );
@@ -96,12 +96,12 @@ const ProductDetailPage = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-gray-200 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
           <div className="mb-6 text-6xl">🔍</div>
-          <h2 className="text-2xl font-bold text-white mb-4">Product Not Found</h2>
-          <p className="text-gray-400 mb-6">The product you're looking for doesn't exist or has been removed.</p>
-          <Button onClick={() => router.push('/shop')} className="bg-gradient-to-r from-purple-600 to-pink-600">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Not Found</h2>
+          <p className="text-gray-600 mb-6">The product you're looking for doesn't exist or has been removed.</p>
+          <Button onClick={() => router.push('/shop')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
             Back to Shop
           </Button>
         </div>
@@ -110,16 +110,16 @@ const ProductDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-gray-200 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-pink-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 right-1/4 w-80 h-80 bg-indigo-200/20 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-slate-800/80 backdrop-blur-md border-b border-slate-700 shadow-lg shadow-black/20">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -127,27 +127,27 @@ const ProductDetailPage = () => {
                 variant="ghost" 
                 size="icon" 
                 onClick={() => router.back()}
-                className="text-white hover:bg-slate-700"
+                className="text-gray-800 hover:bg-gray-100"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <Link href="/" className="text-xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <Link href="/" className="text-xl font-bold text-gray-800 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 GameArena
               </Link>
-              <span className="text-gray-400">/</span>
-              <Link href="/shop" className="text-xl font-bold text-white hover:text-purple-400 transition-colors">
+              <span className="text-gray-500">/</span>
+              <Link href="/shop" className="text-xl font-bold text-gray-800 hover:text-purple-600 transition-colors">
                 Shop
               </Link>
-              <span className="text-gray-400">/</span>
-              <h1 className="text-xl font-bold text-white truncate max-w-xs md:max-w-md">{product.name}</h1>
+              <span className="text-gray-500">/</span>
+              <h1 className="text-xl font-bold text-gray-800 truncate max-w-xs md:max-w-md">{product.name}</h1>
             </div>
             <div className="flex items-center gap-5">
-              <Button variant="outline" className="border-purple-500/50 text-purple-300 hover:bg-purple-600/20">
+              <Button variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50">
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </Button>
               <Link href="/shop/cart">
-                <Button variant="outline" className="border-purple-500/50 text-purple-300 hover:bg-purple-600/20">
+                <Button variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50">
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Cart
                 </Button>
@@ -161,7 +161,7 @@ const ProductDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-lg border border-slate-700 bg-slate-800/50 group">
+            <div className="relative aspect-square overflow-hidden rounded-lg border border-gray-300 bg-white shadow-md group">
               <img
                 src={product.image}
                 alt={product.name}
@@ -170,7 +170,7 @@ const ProductDetailPage = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-4 right-4 bg-white/80 text-gray-800 hover:bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <ZoomIn className="h-5 w-5" />
               </Button>
@@ -179,16 +179,16 @@ const ProductDetailPage = () => {
           </div>
 
           {/* Product Details */}
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white p-6 rounded-lg shadow-md">
             <div>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-                <h1 className="text-3xl font-bold text-white">{product.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={toggleWishlist}
-                    className={`border-purple-500/50 ${isWishlisted ? 'text-red-500' : 'text-purple-300'} hover:bg-purple-600/20`}
+                    className={`border-pink-300 ${isWishlisted ? 'text-pink-600' : 'text-gray-600'} hover:bg-pink-50`}
                   >
                     <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-current' : ''}`} />
                   </Button>
@@ -207,25 +207,25 @@ const ProductDetailPage = () => {
                       className={`h-4 w-4 ${
                         i < Math.floor(product.rating || 0)
                           ? 'text-yellow-500 fill-yellow-500'
-                          : 'text-gray-600'
+                          : 'text-gray-300'
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-gray-400 text-sm">
+                <span className="text-gray-600 text-sm">
                   {product.rating || 0} ({product.reviews || 0} reviews)
                 </span>
               </div>
-              <p className="text-gray-300 mb-6">{product.description}</p>
+              <p className="text-gray-700 mb-6">{product.description}</p>
             </div>
 
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-[#00FFAA]">{formatINR(product.price)}</span>
+              <span className="text-3xl font-bold text-green-600">{formatINR(product.price)}</span>
               {product.oldPrice && (
                 <span className="text-xl text-gray-500 line-through">{formatINR(product.oldPrice)}</span>
               )}
               {product.oldPrice && (
-                <Badge className="bg-green-600 text-white">
+                <Badge className="bg-green-100 text-green-800">
                   {Math.round((1 - product.price / product.oldPrice) * 100)}% OFF
                 </Badge>
               )}
@@ -237,22 +237,22 @@ const ProductDetailPage = () => {
                 {product.inStock > 0 ? (
                   <>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-green-400">
+                    <span className="text-green-700">
                       In Stock ({product.inStock} available)
                     </span>
                   </>
                 ) : (
                   <>
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-red-400">Out of Stock</span>
+                    <span className="text-red-700">Out of Stock</span>
                   </>
                 )}
               </div>
 
               {/* Category */}
               <div className="flex items-center gap-2">
-                <span className="text-gray-400">Category:</span>
-                <Badge variant="outline" className="border-purple-500/50 text-purple-300">
+                <span className="text-gray-600">Category:</span>
+                <Badge variant="outline" className="border-purple-300 text-purple-600">
                   {product.category?.name || 'Uncategorized'}
                 </Badge>
               </div>
@@ -260,24 +260,24 @@ const ProductDetailPage = () => {
 
             {/* Quantity Selector */}
             <div className="flex items-center gap-4">
-              <span className="text-white">Quantity:</span>
+              <span className="text-gray-800">Quantity:</span>
               <div className="flex items-center">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={decreaseQuantity}
                   disabled={quantity <= 1}
-                  className="border-slate-600 text-white hover:bg-slate-700"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
                 >
                   -
                 </Button>
-                <span className="w-12 text-center text-white">{quantity}</span>
+                <span className="w-12 text-center text-gray-800">{quantity}</span>
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={increaseQuantity}
                   disabled={quantity >= product.inStock}
-                  className="border-slate-600 text-white hover:bg-slate-700"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
                 >
                   +
                 </Button>
@@ -290,8 +290,8 @@ const ProductDetailPage = () => {
               disabled={product.inStock === 0 || isAdded}
               className={`w-full py-3 ${
                 isAdded
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold hover:shadow-[0_0_20px_rgba(0,255,170,0.5)]"
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:shadow-lg"
               } transition-all duration-300`}
             >
               {isAdded ? (
@@ -309,31 +309,31 @@ const ProductDetailPage = () => {
 
             {/* Product Features */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
-              <div className="flex flex-col items-center gap-2 text-gray-300 p-3 rounded-lg bg-slate-800/50">
-                <Package className="h-6 w-6 text-purple-400" />
-                <span className="text-sm text-center">Free Shipping</span>
+              <div className="flex items-center gap-2 text-gray-700">
+                <Package className="h-5 w-5 text-purple-600" />
+                <span className="text-sm">Free Shipping</span>
               </div>
-              <div className="flex flex-col items-center gap-2 text-gray-300 p-3 rounded-lg bg-slate-800/50">
-                <Truck className="h-6 w-6 text-purple-400" />
-                <span className="text-sm text-center">Fast Delivery</span>
+              <div className="flex items-center gap-2 text-gray-700">
+                <Truck className="h-5 w-5 text-purple-600" />
+                <span className="text-sm">Fast Delivery</span>
               </div>
-              <div className="flex flex-col items-center gap-2 text-gray-300 p-3 rounded-lg bg-slate-800/50">
-                <Shield className="h-6 w-6 text-purple-400" />
-                <span className="text-sm text-center">Secure Payment</span>
+              <div className="flex items-center gap-2 text-gray-700">
+                <Shield className="h-5 w-5 text-purple-600" />
+                <span className="text-sm">Secure Payment</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Product Details Tabs */}
-        <div className="mt-12">
-          <Card className="bg-slate-800/80 backdrop-blur-md border-slate-700/50 shadow-xl">
+        {/* <div className="mt-12">
+          <Card className="bg-white shadow-md">
             <CardContent className="p-6">
-              <h2 className="text-2xl font-bold text-white mb-4">Product Details</h2>
-              <div className="text-gray-300 space-y-2">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Details</h2>
+              <div className="text-gray-700 space-y-2">
                 {product.details?.map((detail, index) => (
                   <div key={index} className="flex gap-2">
-                    <span className="text-purple-400">•</span>
+                    <span className="text-purple-600">•</span>
                     <span>{detail}</span>
                   </div>
                 )) || (
@@ -342,7 +342,7 @@ const ProductDetailPage = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
       </div>
     </div>
   );
