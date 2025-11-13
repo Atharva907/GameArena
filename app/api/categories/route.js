@@ -1,11 +1,10 @@
-import clientPromise from '@/lib/mongodb';
+import { connectDB } from '@/lib/databaseConnection';
 import Category from '@/models/Category';
 import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    await connectDB();
 
     const categories = await Category.find({}).sort({ name: 1 });
 
@@ -39,8 +38,7 @@ export async function POST(request) {
 
   while (retries > 0) {
     try {
-      const client = await clientPromise;
-      const db = client.db();
+      await connectDB();
 
       const body = await request.json();
       const { name, description, isFeatured } = body;

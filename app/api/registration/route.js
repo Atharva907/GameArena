@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/databaseConnection";
-import { ObjectId } from "mongodb";
+import { ObjectId } from "databaseConnection";
 import Player from "@/models/Player";
 
 export async function POST(request) {

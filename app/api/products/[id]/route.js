@@ -1,11 +1,11 @@
-import { connectToDatabase } from '@/lib/db';
+import { connectDB } from '@/lib/databaseConnection';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
 
 // Get a single product by ID
 export async function GET(request, { params }) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Set response headers
     const headers = {
@@ -39,7 +39,7 @@ export async function GET(request, { params }) {
 // Update a product (admin only)
 export async function PUT(request, { params }) {
   try {
-    await connectToDatabase();
+    await connectDB();
 
     const updateData = await request.json();
     
@@ -75,7 +75,7 @@ export async function PUT(request, { params }) {
 // Delete a product (admin only)
 export async function DELETE(request, { params }) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Await params to get the ID (required in Next.js 15)
     const { id } = await params;

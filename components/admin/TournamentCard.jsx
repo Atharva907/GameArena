@@ -7,11 +7,18 @@ import { Calendar, Clock, MapPin, Users, Edit, Trash2, Trophy } from "lucide-rea
 const TournamentCard = ({ tournament, onEdit, onDelete, getStatusColor, className }) => {
   return (
     <Card key={tournament._id} className={`overflow-hidden ${className || ""}`}>
-      <div className="aspect-video w-full bg-gray-200 dark:bg-gray-700 relative">
-        {/* In a real app, use Next.js Image component */}
-        <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-          <Trophy className="h-12 w-12" />
-        </div>
+      <div className="aspect-video w-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+        {tournament.imageUrl ? (
+          <img 
+            src={tournament.imageUrl} 
+            alt={tournament.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+            <Trophy className="h-12 w-12" />
+          </div>
+        )}
       </div>
       <CardHeader>
         <div className="flex justify-between items-start">

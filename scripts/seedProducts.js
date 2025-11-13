@@ -1,9 +1,9 @@
-import { connectToDatabase } from '../lib/db';
+import { connectDB } from '../lib/databaseConnection';
 import Product from '../models/Product';
 
 async function seedProducts() {
   try {
-    await connectToDatabase();
+    await connectDB();
 
     // Clear existing products
     await Product.deleteMany({});

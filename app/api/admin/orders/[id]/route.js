@@ -17,7 +17,8 @@ export async function GET(request, { params }) {
   try {
     await connectDB();
 
-    const order = await Order.findById(params.id)
+    const { id } = await params;
+    const order = await Order.findById(id)
       .populate('items.product')
       .populate('player', 'name email');
 
@@ -43,6 +44,7 @@ export async function PATCH(request, { params }) {
   try {
     await connectDB();
 
+    const { id } = await params;
     const { status } = await request.json();
 
     if (!status) {
@@ -53,7 +55,7 @@ export async function PATCH(request, { params }) {
     }
 
     const order = await Order.findByIdAndUpdate(
-      params.id,
+      id,
       { status },
       { new: true }
     ).populate('items.product').populate('player', 'name email');
@@ -80,7 +82,8 @@ export async function DELETE(request, { params }) {
   try {
     await connectDB();
 
-    const order = await Order.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const order = await Order.findByIdAndDelete(id);
 
     if (!order) {
       return NextResponse.json(

@@ -1,13 +1,13 @@
-import clientPromise from '@/lib/mongodb';
+import { connectDB } from '@/lib/databaseConnection';
 import Category from '@/models/Category';
 import { NextResponse } from 'next/server';
 
 export async function GET(request, { params }) {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    await connectDB();
 
-    const category = await Category.findById(params.id);
+    const { id } = await params;
+    const category = await Category.findById(id);
 
     if (!category) {
       return NextResponse.json(
@@ -31,9 +31,9 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    await connectDB();
 
+    const { id } = await params;
     const body = await request.json();
     const { name, description, isFeatured } = body;
 
@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
     }
 
     // Check if category exists
-    const category = await Category.findById(params.id);
+    const category = await Category.findById(id);
     if (!category) {
       return NextResponse.json(
         { success: false, message: 'Category not found' },
@@ -58,7 +58,7 @@ export async function PUT(request, { params }) {
     if (name.trim() !== category.name) {
       const existingCategory = await Category.findOne({ 
         name: name.trim(),
-        _id: { $ne: params.id }
+        _id: { $ne: id }
       });
 
       if (existingCategory) {
@@ -92,10 +92,10 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const client = await clientPromise;
-    const db = client.db();
+    await connectDB();
 
-    const category = await Category.findById(params.id);
+    const { id } = await params;
+    const category = await Category.findById(id);
 
     if (!category) {
       return NextResponse.json(
@@ -116,7 +116,7 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    await Category.findByIdAndDelete(params.id);
+    await Category.findByIdAndDelete(id);
 
     return NextResponse.json({
       success: true,

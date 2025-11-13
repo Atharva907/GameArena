@@ -350,10 +350,20 @@ const GameArena = () => {
                 className="bg-gradient-to-br from-[#1A1A2E]/80 to-[#0F172A]/80 backdrop-blur-md border border-white/10 hover:border-[#00FFAA]/30 transition-all duration-300 rounded-xl overflow-hidden hover:shadow-[0_0_30px_rgba(0,255,170,0.3)] hover:-translate-y-1 group"
               >
                 <div className="h-32 sm:h-40 md:h-48 bg-gradient-to-br from-purple-900/40 via-blue-900/30 to-indigo-900/40 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10"></div>
-                  <div className="text-4xl sm:text-5xl md:text-6xl group-hover:scale-110 transition-transform duration-300">
-                    🎮
-                  </div>
+                  {tournament.imageUrl ? (
+                    <img 
+                      src={tournament.imageUrl} 
+                      alt={tournament.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="text-4xl sm:text-5xl md:text-6xl group-hover:scale-110 transition-transform duration-300">
+                        🎮
+                      </div>
+                    </>
+                  )}
                 </div>
                 <CardContent className="p-4 sm:p-6">
                   <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 text-[#00FFAA] truncate">

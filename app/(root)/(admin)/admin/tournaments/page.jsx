@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Calendar, Clock, Trophy, Users, MapPin } from "lucide-react";
 import TournamentCard from "@/components/admin/TournamentCard";
+import TournamentImageSelector from "@/components/Application/Admin/TournamentImageSelector";
 
 const TournamentsPage = () => {
   const [tournaments, setTournaments] = useState([]);
@@ -316,6 +317,7 @@ const TournamentsPage = () => {
   };
 
   const filterTournaments = (status) => {
+    if (!Array.isArray(tournaments)) return [];
     if (status === "all") return tournaments;
     return tournaments.filter(tournament => tournament.status === status);
   };
@@ -565,16 +567,10 @@ const TournamentsPage = () => {
                   rows={3}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="imageUrl">Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleInputChange}
-                  placeholder="Enter image URL"
-                />
-              </div>
+              <TournamentImageSelector 
+                value={formData.imageUrl}
+                onChange={(value) => setFormData(prev => ({ ...prev, imageUrl: value }))}
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
@@ -858,16 +854,10 @@ const TournamentsPage = () => {
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-imageUrl">Image URL</Label>
-              <Input
-                id="edit-imageUrl"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleInputChange}
-                placeholder="Enter image URL"
-              />
-            </div>
+            <TournamentImageSelector 
+              value={formData.imageUrl}
+              onChange={(value) => setFormData(prev => ({ ...prev, imageUrl: value }))}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>

@@ -7,11 +7,9 @@ export async function GET(request) {
   try {
     await connectDB();
 
-    // Get token from cookies
     let token = request.cookies.get("token")?.value;
     console.log("Token from cookie:", token ? "Present" : "Missing");
     
-    // If not in cookies, try Authorization header
     if (!token) {
       const authHeader = request.headers.get("authorization");
       if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -25,7 +23,6 @@ export async function GET(request) {
       return response(false, 401, "Authentication required");
     }
 
-    // Verify token
     const secret = new TextEncoder().encode(process.env.SECRET_KEY);
     console.log("Verifying token...");
     
@@ -33,8 +30,6 @@ export async function GET(request) {
       const { payload } = await jwtVerify(token, secret);
       console.log("Token verified successfully, payload:", payload);
       
-      // Get user data
-      // Ensure the id is a string for MongoDB query
       const userId = typeof payload.id === 'string' ? payload.id : payload.id.toString();
       const user = await UserModel.findById(userId);
 
@@ -45,7 +40,6 @@ export async function GET(request) {
       
       console.log("User data found:", { id: user._id, name: user.name, email: user.email });
 
-      // Return user data
       return response(true, 200, "User data retrieved successfully", {
       id: user._id,
       name: user.name,

@@ -1,11 +1,11 @@
-import { connectToDatabase } from '@/lib/db';
+import { connectDB } from '@/lib/databaseConnection';
 import Player from '@/models/Player';
 import { NextResponse } from 'next/server';
 
 // Get player's wallet balance
 export async function GET(request) {
   try {
-    await connectToDatabase();
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');
@@ -41,7 +41,7 @@ export async function GET(request) {
 // Add funds to player's wallet
 export async function POST(request) {
   try {
-    await connectToDatabase();
+    await connectDB();
 
     const { email, amount, description } = await request.json();
 

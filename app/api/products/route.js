@@ -1,4 +1,4 @@
-import { connectToDatabase } from '@/lib/databaseConnection';
+import { connectDB } from '@/lib/databaseConnection';
 import Product from '@/models/Product';
 import Category from '@/models/Category';
 import { NextResponse } from 'next/server';
@@ -25,7 +25,7 @@ export async function GET(request) {
     }
     
     console.log('Connecting to database...');
-    await connectToDatabase();
+    await connectDB();
     
     // 确保连接已建立
     if (mongoose.connection.readyState !== 1) {
@@ -113,7 +113,7 @@ export async function GET(request) {
 // Create a new product (admin only)
 export async function POST(request) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Set response headers
     const headers = {

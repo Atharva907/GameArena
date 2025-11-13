@@ -11,7 +11,7 @@ const rootReducer = combineReducers({
 // Persist config
 const persistConfig = {
   key: "root",
-  storage, // ✅ lowercase and correct storage
+  storage, 
 };
 
 // Persisted reducer
