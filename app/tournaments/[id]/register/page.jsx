@@ -77,7 +77,7 @@ export default function TournamentRegistration() {
   useEffect(() => {
     const fetchTournament = async () => {
       try {
-        const response = await fetch(`/api/tournament/${tournamentId}`);
+        const response = await fetch(`/api/tournaments/${tournamentId}`);
         if (response.ok) {
           const data = await response.json();
           setTournament(data.data || data);
@@ -161,32 +161,39 @@ export default function TournamentRegistration() {
     e.preventDefault();
     setIsLoading(true);
 
+    // Log registration data
+    const registrationData = {
+      tournamentId,
+      playerEmail: playerDetails.email,
+      playerName: playerDetails.fullName,
+      dateOfBirth: playerDetails.dateOfBirth,
+      city: playerDetails.city,
+      state: playerDetails.state,
+      teamName: tournamentDetails.teamName,
+      contactNumber: tournamentDetails.contactNumber
+    };
+    console.log("Starting tournament registration with data:", registrationData);
+
     try {
       const response = await fetch("/api/registration", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          tournamentId,
-          playerEmail: playerDetails.email,
-          playerName: playerDetails.fullName,
-          dateOfBirth: playerDetails.dateOfBirth,
-          city: playerDetails.city,
-          state: playerDetails.state,
-          teamName: tournamentDetails.teamName,
-          contactNumber: tournamentDetails.contactNumber
-        })
+        body: JSON.stringify(registrationData)
       });
 
       const data = await response.json();
+      console.log("Registration API response:", { status: response.status, data });
 
       if (response.ok) {
+        console.log("Registration successful");
         alert(`You've been successfully registered for ${tournament.name}!`);
         setTimeout(() => {
           router.push("/dashboard/my-tournaments");
         }, 2000);
       } else {
+        console.error("Registration failed:", data.error);
         alert(data.error || "Failed to register for tournament");
       }
     } catch (error) {

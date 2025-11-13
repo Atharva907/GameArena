@@ -1,12 +1,12 @@
-import { connectDB } from "@/lib/databaseConnection";
+import mongoose from "mongoose";
 
 export async function GET(request) {
   try {
     // Connect to database
-    const db = await connectDB();
+    await mongoose.connect(process.env.MONGODB_URI);
 
     // Get all registrations from tournamentRegistrations collection
-    const registrations = await db.db.collection("tournamentRegistrations").find({}).toArray();
+    const registrations = await mongoose.connection.db.collection("tournamentRegistrations").find({}).toArray();
 
     if (registrations.length === 0) {
       return Response.json({ data: [] });
@@ -16,7 +16,7 @@ export async function GET(request) {
     const tournamentIds = [...new Set(registrations.map(reg => reg.tournamentId))];
 
     // Fetch tournament details
-    const tournaments = await db.db.collection("tournaments")
+    const tournaments = await mongoose.connection.db.collection("tournaments")
       .find({ _id: { $in: tournamentIds } })
       .toArray();
 

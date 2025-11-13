@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/databaseConnection";
+import mongoose from "mongoose";
 import { ObjectId } from "mongodb";
 
 export async function GET(request) {
@@ -6,6 +6,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const tournamentId = searchParams.get("tournamentId");
     const email = searchParams.get("email");
+    console.log("Checking registration for:", { tournamentId, email });
 
     if (!tournamentId || !email) {
       return new Response(
@@ -22,14 +23,16 @@ export async function GET(request) {
       );
     }
 
-    const db = await connectDB();
+    await mongoose.connect(process.env.MONGODB_URI);
 
     // Check if player is already registered for this tournament
-    const existingRegistration = await db.db.collection("tournamentRegistrations").findOne({
+    console.log("Checking database for existing registration");
+    const existingRegistration = await mongoose.connection.db.collection("tournamentRegistrations").findOne({
       tournamentId: new ObjectId(tournamentId),
       playerEmail: email
     });
-
+    
+    console.log("Registration check result:", { isRegistered: !!existingRegistration });
     return new Response(JSON.stringify({
       isRegistered: !!existingRegistration
     }), { status: 200 });

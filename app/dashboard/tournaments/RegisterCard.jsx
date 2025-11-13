@@ -22,10 +22,24 @@ export default function RegisterCard({ tournament, isRegistered, onRegister, onU
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-slate-800 border-slate-700 text-white h-full flex flex-col">
       <div className="relative h-40 overflow-hidden">
         {/* Tournament Image or Placeholder */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 opacity-80"></div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Trophy className="h-16 w-16 text-white opacity-50" />
-        </div>
+        {tournament.imageUrl ? (
+          <img 
+            src={tournament.imageUrl} 
+            alt={tournament.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/assets/images/tournaments/placeholder.jpg";
+            }}
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 opacity-80"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Trophy className="h-16 w-16 text-white opacity-50" />
+            </div>
+          </>
+        )}
         
         {/* Status Badge */}
         <div className="absolute top-3 right-3">

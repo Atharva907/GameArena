@@ -11,7 +11,6 @@ const navItems = [
   { name: "My Tournaments", href: "/dashboard/my-tournaments", icon: Trophy, color: "from-yellow-600 to-orange-600" },
   { name: "Orders", href: "/dashboard/orders", icon: Package, color: "from-indigo-600 to-blue-600" },
   { name: "Wallet", href: "/dashboard/wallet", icon: Wallet, color: "from-green-600 to-emerald-600" },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings, color: "from-gray-600 to-slate-600" },
 ];
 
 export default function Sidebar({ isOpen = false, onClose = () => {} }) {

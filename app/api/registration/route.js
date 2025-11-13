@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/databaseConnection";
-import { ObjectId } from "databaseConnection";
+import mongoose from "mongoose";
 import Player from "@/models/Player";
 
 export async function POST(request) {
@@ -24,7 +24,7 @@ export async function POST(request) {
     }
 
     // Validate tournament ID
-    if (!ObjectId.isValid(tournamentId)) {
+    if (!mongoose.Types.ObjectId.isValid(tournamentId)) {
       return Response.json(
         { error: "Invalid tournament ID" },
         { status: 400 }
@@ -34,7 +34,7 @@ export async function POST(request) {
     const db = await connectDB();
 
     // Check if tournament exists
-    const tournament = await db.db.collection("tournaments").findOne({ _id: new ObjectId(tournamentId) });
+    const tournament = await mongoose.connection.db.collection("tournaments").findOne({ _id: new mongoose.Types.ObjectId(tournamentId) });
     if (!tournament) {
       return Response.json(
         { error: "Tournament not found" },
@@ -43,8 +43,8 @@ export async function POST(request) {
     }
 
     // Check if player is already registered for this tournament
-    const existingRegistration = await db.db.collection("tournamentRegistrations").findOne({
-      tournamentId: new ObjectId(tournamentId),
+    const existingRegistration = await mongoose.connection.db.collection("tournamentRegistrations").findOne({
+      tournamentId: new mongoose.Types.ObjectId(tournamentId),
       playerEmail: playerEmail
     });
 
@@ -83,7 +83,7 @@ export async function POST(request) {
 
     // Create new registration
     const newRegistration = {
-      tournamentId: new ObjectId(tournamentId),
+      tournamentId: new mongoose.Types.ObjectId(tournamentId),
       playerEmail,
       playerName,
       dateOfBirth,
@@ -96,12 +96,12 @@ export async function POST(request) {
     };
 
     // Start a transaction for registration
-    const session = await db.startSession();
+    const session = await mongoose.connection.startSession();
     
     try {
       await session.withTransaction(async () => {
         // Insert registration
-        const result = await db.db.collection("tournamentRegistrations").insertOne(newRegistration, { session });
+        const result = await mongoose.connection.db.collection("tournamentRegistrations").insertOne(newRegistration, { session });
         
         if (!result.acknowledged) {
           throw new Error("Failed to register for tournament");
@@ -118,7 +118,7 @@ export async function POST(request) {
           
           // Create transaction record
           const transaction = {
-            id: new ObjectId().toString(),
+            id: new mongoose.Types.ObjectId().toString(),
             date: new Date().toLocaleDateString(),
             type: "Tournament Entry Fee",
             amount: -feeAmount,
@@ -128,7 +128,7 @@ export async function POST(request) {
           };
           
           // Add transaction to wallet
-          await db.db.collection("wallets").updateOne(
+          await mongoose.connection.db.collection("wallets").updateOne(
             { playerEmail: playerEmail },
             { 
               $push: { transactions: { $each: [transaction], $position: 0 } }
