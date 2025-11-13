@@ -79,7 +79,7 @@ const RegisterPage = () => {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center">
-      {/* Background Video */}
+      echo {/* Background Video */}
       <div className="absolute inset-0 -z-10">
         <video
           autoPlay
@@ -91,7 +91,7 @@ const RegisterPage = () => {
           <source src="/assets/angel-sage.3840x2160.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-      </div>
+      </div> {">"} temp.txt
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/40 -z-10"></div>

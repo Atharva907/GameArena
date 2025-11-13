@@ -324,6 +324,25 @@ const ProductDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Product Details Tabs */}
+        {/* <div className="mt-12">
+          <Card className="bg-white shadow-md">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Details</h2>
+              <div className="text-gray-700 space-y-2">
+                {product.details?.map((detail, index) => (
+                  <div key={index} className="flex gap-2">
+                    <span className="text-purple-600">•</span>
+                    <span>{detail}</span>
+                  </div>
+                )) || (
+                  <p>No additional details available for this product.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div> */}
       </div>
     </div>
   );
