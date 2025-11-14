@@ -10,6 +10,7 @@ export async function GET(request) {
     // Get query parameters for filtering
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
+    const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 10;
     const skip = (page - 1) * limit;
@@ -17,6 +18,15 @@ export async function GET(request) {
     // Build query based on parameters
     const query = { deletedAt: null };
     if (role) query.role = role;
+
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ];
+    }
 
     // Fetch users with pagination
     const users = await User.find(query)

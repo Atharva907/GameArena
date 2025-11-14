@@ -72,7 +72,7 @@ export default function AdminDashboard() {
         const usersRes = await fetch('/api/users');
         if (usersRes.ok) {
           const usersData = await usersRes.json();
-          totalUsers = usersData.users?.length || 0;
+          totalUsers = usersData.data?.pagination?.total || 0;
         }
       } catch (err) {
         console.log('Users API not available yet:', err.message);
