@@ -192,13 +192,13 @@ export default function MyAccount() {
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-t-3xl text-white">
       <div className="relative mb-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 h-1 w-full"></div>
+        {/* <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 h-1 w-full"></div> */}
         <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">{profileExists ? "My Profile" : "Create Your Profile"}</h1>
         <p className="text-gray-400">{profileExists ? "Manage your gaming profile" : "Join the gaming community"}</p>
         <div className="absolute -right-10 -top-10 h-32 w-32 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-full blur-xl"></div>
         <div className="absolute -left-10 -bottom-10 h-32 w-32 bg-gradient-to-br from-blue-600/20 to-cyan-600/20 rounded-full blur-xl"></div>
       </div>
-      
+
       <Card className="w-full bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 shadow-xl overflow-hidden relative text-white">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600"></div>
         <CardHeader className="pb-4 bg-slate-800/50 border-b border-slate-700">

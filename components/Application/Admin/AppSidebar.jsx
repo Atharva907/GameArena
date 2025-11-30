@@ -40,7 +40,7 @@ const AppSidebar = ({ isOpen = false, onClose = () => {} }) => {
         className={`fixed top-0 left-0 h-full w-64 bg-white dark:bg-card border-r z-50 flex flex-col
           transform transition-transform duration-300 ${
             isOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0`}
+          } md:relative md:translate-x-0`}
         aria-hidden={isOpen ? "false" : "true"}
       >
         {/* Header: logo + close button */}
@@ -95,7 +95,7 @@ const AppSidebar = ({ isOpen = false, onClose = () => {} }) => {
                         <menu.icon className="text-base" /> 
                         <span>{menu.title}</span>
                         {menu.submenu?.length > 0 && (
-                          <LuChevronRight className="ml-auto text-base transition-transform duration-200 group-data-[state-open]/collapsible:rotate-90" /> // Changed to text-base
+                          <LuChevronRight className="ml-auto text-base transition-transform duration-200 group-data-[state-open]/collapsible:rotate-90" /> 
                         )}
                       </Link>
                     </SidebarMenuButton>

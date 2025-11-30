@@ -22,13 +22,13 @@ const Layout = ({ children }) => {
     >
       <SidebarProvider>
         <div className="admin-container flex h-screen">
-          {/* Sidebar Area */}
-          <div className="admin-sidebar">
+          {/* Sidebar Area - Only show on desktop or when open on mobile */}
+          <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:flex md:relative z-50`}>
             <AppSidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
           </div>
 
           {/* Main Content Area */}
-          <div className="admin-content flex flex-col flex-1 ml-0 md:ml-64 relative">
+          <div className="admin-content flex flex-col flex-1 relative transition-all duration-300 w-full">
             {/* Topbar */}
             <Topbar onOpenSidebar={openSidebar} />
 

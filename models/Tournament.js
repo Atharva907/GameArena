@@ -1,7 +1,5 @@
-// Import mongoose for schema creation
 import mongoose from "mongoose";
 
-// Define the tournament schema
 const tournamentSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -85,8 +83,7 @@ const tournamentSchema = new mongoose.Schema({
     default: ""
   }
 }, {
-  timestamps: true // Add createdAt and updatedAt timestamps
+  timestamps: true 
 });
 
-// Create and export the Tournament model
 export default mongoose.models.Tournament || mongoose.model("Tournament", tournamentSchema);

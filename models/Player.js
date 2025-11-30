@@ -61,13 +61,11 @@ const PlayerSchema = new mongoose.Schema({
   }
 });
 
-// Pre-save middleware to update the updatedAt field
 PlayerSchema.pre("save", function(next) {
   this.updatedAt = Date.now();
   next();
 });
 
-// Create the model from the schema with explicit collection name
 const Player = mongoose.models.Player || mongoose.model("Player", PlayerSchema, "players");
 
 export default Player;
