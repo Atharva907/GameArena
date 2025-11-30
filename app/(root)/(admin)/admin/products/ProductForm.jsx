@@ -173,7 +173,7 @@ export default function ProductForm({ product = {} }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Price ($)
+              Price (₹)
             </label>
             <div className="mt-1">
               <input

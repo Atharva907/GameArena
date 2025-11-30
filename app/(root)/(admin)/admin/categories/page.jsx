@@ -29,14 +29,16 @@ export default function CategoriesPage() {
   }
 
   async function handleDeleteCategory(id) {
-    if (confirm('Are you sure you want to delete this category? Products in this category will not be deleted.')) {
+    if (confirm('Are you sure you want to delete this category?')) {
       try {
         const response = await fetch(`/api/categories/${id}`, {
           method: 'DELETE',
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(data.message || 'Failed to delete category');
         }
 
         // Refresh categories list
@@ -44,7 +46,7 @@ export default function CategoriesPage() {
         alert('Category deleted successfully');
       } catch (err) {
         console.error('Error deleting category:', err);
-        alert('Failed to delete category');
+        alert(err.message || 'Failed to delete category');
       }
     }
   }
