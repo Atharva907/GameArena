@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }) {
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white transition-all duration-300 md:ml-64`}
+      <div className={`flex-1 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white transition-all duration-300 md:ml-64`}>
         <Topbar onOpenSidebar={openSidebar} />
         <main className="flex-1 overflow-y-auto p-4 pt-20 md:pt-4">{children}</main>
       </div>
