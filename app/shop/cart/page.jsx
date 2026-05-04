@@ -1,6 +1,7 @@
 "use client";
 
 import { useCart } from '@/components/ui/Cart';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -10,15 +11,10 @@ import { formatCurrency } from '@/lib/utils';
 
 const CartPageContent = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const router = useRouter();
 
   const handleCheckout = () => {
-    // Navigate to checkout page
-    window.location.href = '/shop/checkout';
-  };
-
-  // Custom formatter for Indian Rupee
-  const formatINR = (amount) => {
-    return `₹${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+    router.push('/shop/checkout');
   };
 
   return (
@@ -63,11 +59,11 @@ const CartPageContent = () => {
               </div>
               <h3 className="text-xl font-medium text-white mb-2">Your cart is empty</h3>
               <p className="text-gray-400 mb-6 max-w-md mx-auto">Looks like you haven't added any games to your cart yet. Start shopping to fill it up!</p>
-              <Link href="/shop">
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 px-6 py-2.5 rounded-full">
+              <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 px-6 py-2.5 rounded-full">
+                <Link href="/shop">
                   Continue Shopping
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -94,7 +90,7 @@ const CartPageContent = () => {
                         <div className="flex justify-between mb-2">
                           <h3 className="text-lg font-medium text-white group-hover:text-purple-300 transition-colors duration-300">{item.name}</h3>
                           {/* REMOVED: Individual item price to prevent 'count' confusion and keep subtotal as the focus */}
-                          {/* <p className="text-lg font-bold text-white">{formatINR(item.price)}</p> */}
+                          {/* <p className="text-lg font-bold text-white">{formatCurrency(item.price)}</p> */}
                         </div>
                         <p className="text-sm text-gray-400 mb-4">{item.description}</p>
                         <div className="flex items-center justify-between">
@@ -120,7 +116,7 @@ const CartPageContent = () => {
                           <div className="flex items-center gap-2">
                             {/* RESTORED: Subtotal display */}
                             <span className="text-sm text-gray-400 mr-2">Subtotal:</span>
-                            <span className="text-sm font-medium">{formatINR(item.price * item.quantity)}</span>
+                            <span className="text-sm font-medium">{formatCurrency(item.price * item.quantity)}</span>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -153,7 +149,7 @@ const CartPageContent = () => {
                 <CardContent className="space-y-4 relative z-10">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Subtotal</span>
-                    <span>{formatINR(getTotalPrice())}</span>
+                    <span>{formatCurrency(getTotalPrice())}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Shipping</span>
@@ -166,7 +162,7 @@ const CartPageContent = () => {
                   <Separator className="bg-slate-700" />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>{formatINR(getTotalPrice())}</span>
+                    <span>{formatCurrency(getTotalPrice())}</span>
                   </div>
                   <div className="space-y-2 pt-4">
                     <Button
@@ -183,14 +179,11 @@ const CartPageContent = () => {
                     >
                       Clear Cart
                     </Button>
-                    <Link href="/shop">
-                      <Button
-                        variant="ghost"
-                        className="w-full text-gray-400 hover:text-white transition-colors duration-300"
-                      >
+                    <Button asChild variant="ghost" className="w-full text-gray-400 hover:text-white transition-colors duration-300">
+                      <Link href="/shop">
                         Continue Shopping
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                   
                   {/* Trust badges */}

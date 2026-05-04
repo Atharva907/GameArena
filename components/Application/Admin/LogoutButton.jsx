@@ -7,21 +7,34 @@ import { showToast } from '@/lib/showToast';
 import axios from 'axios';
 import { useRouter } from "next/navigation"; 
 import { WEBSITE_LOGIN } from '@/routes/WebsiteRoute';
+import { useDispatch } from 'react-redux';
+import { logout } from '@/store/reducer/authReducer';
+import { apiUrl, axiosWithCredentials } from '@/lib/apiClient';
 
 const LogoutButton = () => {
   const router = useRouter()
+  const dispatch = useDispatch()
 
   const handleLogout = async () => {
     try {
-      const { data: logoutResponse } = await axios.post('/api/auth/logout')
+      const { data: logoutResponse } = await axios.post(
+        apiUrl('/auth/logout'),
+        {},
+        axiosWithCredentials,
+      )
       if(!logoutResponse.success){
         throw new Error(logoutResponse.message)
       }
 
+      dispatch(logout())
+      localStorage.removeItem("playerEmail")
       showToast('success', logoutResponse.message)
-      router.push(WEBSITE_LOGIN)
+      router.replace(WEBSITE_LOGIN)
     } catch (error) {
-      showToast('error', error.message)
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error.message
+      showToast('error', message || 'Logout failed')
     }
   }
 

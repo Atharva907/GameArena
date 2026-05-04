@@ -2,12 +2,18 @@
 
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, getTransactionColor } from "@/lib/esportUtils";
-import { Trophy, ArrowUpRight, ArrowDownRight, CreditCard, Gift, Wallet } from "lucide-react";
+import {
+  Trophy,
+  ArrowUpRight,
+  ArrowDownRight,
+  CreditCard,
+  Gift,
+  Wallet,
+} from "lucide-react";
 
-export default function TransactionRow({ date, type, amount, status, tournamentId, description }) {
-  // Get appropriate icon based on transaction type
-  const getTransactionIcon = (type) => {
-    switch (type) {
+export default function TransactionRow({ date, type, amount, status, description }) {
+  const getTransactionIcon = (value) => {
+    switch (value) {
       case "Tournament Win":
         return <Trophy className="h-4 w-4" />;
       case "Withdrawal":
@@ -22,52 +28,55 @@ export default function TransactionRow({ date, type, amount, status, tournamentI
         return <Wallet className="h-4 w-4" />;
     }
   };
-  
-  // Get status badge color
-  const getStatusColor = (status) => {
-    switch (status) {
+
+  const getStatusColor = (value) => {
+    switch (value) {
       case "completed":
-        return "bg-green-600/20 text-green-300 border-green-500/50";
+        return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
       case "pending":
-        return "bg-yellow-600/20 text-yellow-300 border-yellow-500/50";
+        return "border-amber-500/20 bg-amber-500/10 text-amber-300";
       case "failed":
-        return "bg-red-600/20 text-red-300 border-red-500/50";
+        return "border-rose-500/20 bg-rose-500/10 text-rose-300";
       default:
-        return "bg-gray-600/20 text-gray-300 border-gray-500/50";
+        return "border-slate-700 bg-slate-800 text-slate-300";
     }
   };
-  
+
   return (
-    <div className="flex items-center justify-between py-3 px-4 hover:bg-slate-700/30 rounded-lg transition-colors">
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${amount > 0 ? "bg-green-500/20" : "bg-red-500/20"}`}>
-          <div className={amount > 0 ? "text-green-400" : "text-red-400"}>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-2.5 transition-colors hover:border-slate-700 hover:bg-slate-950/50">
+      <div className="flex min-w-0 items-center gap-3">
+        <div
+          className={`rounded-lg p-1.5 ${
+            amount > 0 ? "bg-emerald-500/10" : "bg-rose-500/10"
+          }`}
+        >
+          <div className={amount > 0 ? "text-emerald-300" : "text-rose-300"}>
             {getTransactionIcon(type)}
           </div>
         </div>
-        
-        <div>
-          <p className="font-medium text-white">{type}</p>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-white">{type}</p>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
             <span>{formatDate(date)}</span>
             {description && (
               <>
-                <span>•</span>
-                <span>{description}</span>
+                <span aria-hidden="true">•</span>
+                <span className="truncate">{description}</span>
               </>
             )}
           </div>
         </div>
       </div>
-      
-      <div className="flex items-center gap-3">
+
+      <div className="flex items-center gap-2.5">
         {status && (
-          <Badge variant="outline" className={getStatusColor(status)}>
+          <Badge variant="outline" className={`${getStatusColor(status)} text-[11px]`}>
             {status}
           </Badge>
         )}
-        
-        <p className={`font-semibold ${getTransactionColor(type)}`}>
+
+        <p className={`text-sm font-semibold ${getTransactionColor(type)}`}>
           {amount > 0 ? `+${formatCurrency(amount)}` : formatCurrency(amount)}
         </p>
       </div>

@@ -2,11 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, Clock, Trophy, ArrowLeft, ExternalLink } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  Trophy,
+  ArrowLeft,
+  ExternalLink,
+} from "lucide-react";
 import { getStatusColor } from "@/lib/esportUtils";
+import TournamentBracket from "@/components/tournaments/TournamentBracket";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function TournamentDetails() {
   const [tournament, setTournament] = useState(null);
@@ -19,12 +28,12 @@ export default function TournamentDetails() {
   useEffect(() => {
     const fetchTournamentDetails = async () => {
       try {
-        const response = await fetch(`/api/tournament/${tournamentId}`);
+        const response = await apiFetch(`/tournaments/${tournamentId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch tournament details");
         }
         const data = await response.json();
-        setTournament(data);
+        setTournament(data.data || data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -37,139 +46,134 @@ export default function TournamentDetails() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="p-3 md:p-4">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4 text-sm text-slate-400">
+          Loading tournament details...
+        </section>
       </div>
     );
   }
 
   if (error || !tournament) {
     return (
-      <Card className="bg-slate-800 border-slate-700 text-white">
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <h3 className="text-xl font-semibold mb-2">Error Loading Tournament</h3>
-          <p className="text-gray-400 text-center mb-6">{error || "Tournament not found"}</p>
-          <Button onClick={() => router.back()} className="bg-purple-600 hover:bg-purple-700">
-            Go Back
+      <div className="p-3 md:p-4">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4">
+          <h1 className="text-xl font-semibold text-white">Error loading tournament</h1>
+          <p className="mt-2 text-sm text-slate-400">{error || "Tournament not found"}</p>
+          <Button
+            onClick={() => router.push("/dashboard/my-tournaments")}
+            className="mt-4 bg-sky-600 text-white hover:bg-sky-500"
+          >
+            Go back
           </Button>
-        </CardContent>
-      </Card>
+        </section>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-3 md:p-4">
       <Button
         variant="outline"
-        onClick={() => router.back()}
-        className="mb-4 bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+        onClick={() => router.push("/dashboard/my-tournaments")}
+        className="border-slate-700 bg-slate-950/30 text-slate-200 hover:bg-slate-800"
       >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Tournaments
+        <ArrowLeft className="h-4 w-4" />
+        Back to my tournaments
       </Button>
 
-      <Card className="bg-slate-800 border-slate-700 text-white overflow-hidden">
-        <div className="relative h-48 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 opacity-80"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Trophy className="h-20 w-20 text-white opacity-50" />
+      <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Trophy className="h-4 w-4 text-slate-500" />
+              <h1 className="text-xl font-semibold tracking-tight text-white">
+                {tournament.name}
+              </h1>
+              <Badge className={getStatusColor(tournament.status)}>
+                {tournament.status}
+              </Badge>
+              <Badge variant="outline" className="border-slate-700 bg-slate-950/30 text-slate-200">
+                {tournament.game}
+              </Badge>
+            </div>
+            <p className="text-sm text-slate-400">{tournament.description}</p>
           </div>
-          <div className="absolute top-4 right-4">
-            <Badge className={getStatusColor(tournament.status)}>
-              {tournament.status}
-            </Badge>
+
+          <Button
+            onClick={() => router.push(`/tournaments/${tournament._id}`)}
+            className="bg-sky-600 text-white hover:bg-sky-500"
+          >
+            <ExternalLink className="h-4 w-4" />
+            View public page
+          </Button>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              label: "Date",
+              value: `${tournament.startDate} - ${tournament.endDate}`,
+              icon: Calendar,
+            },
+            {
+              label: "Time",
+              value: `${tournament.startTime} - ${tournament.endTime}`,
+              icon: Clock,
+            },
+            {
+              label: "Location",
+              value: tournament.location,
+              icon: MapPin,
+            },
+            {
+              label: "Format",
+              value: tournament.format,
+              icon: Users,
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-3"
+            >
+              <div className="flex items-center gap-2">
+                <item.icon className="h-4 w-4 text-slate-500" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {item.label}
+                </p>
+              </div>
+              <p className="mt-2 text-sm text-white">{item.value}</p>
+            </div>
+          ))}
+          <div className="rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Prize pool
+            </p>
+            <p className="mt-2 text-sm text-amber-300">{tournament.prize || "N/A"}</p>
           </div>
-          <div className="absolute top-4 left-4">
-            <Badge variant="outline" className="bg-slate-900/70 text-white border-slate-600">
-              {tournament.game}
-            </Badge>
+          <div className="rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Entry fee
+            </p>
+            <p className="mt-2 text-sm text-emerald-300">{tournament.entryFee || "Free"}</p>
           </div>
         </div>
 
-        <CardHeader>
-          <CardTitle className="text-2xl">{tournament.name}</CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-2 text-purple-400">Description</h3>
-            <p className="text-gray-300">{tournament.description}</p>
+        {tournament.rules && (
+          <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/30 px-3 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Rules and regulations
+            </p>
+            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-300">
+              {tournament.rules}
+            </p>
           </div>
+        )}
+      </section>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-purple-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Date</p>
-                  <p>{tournament.startDate} - {tournament.endDate}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-purple-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Time</p>
-                  <p>{tournament.startTime} - {tournament.endTime}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-purple-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Location</p>
-                  <p>{tournament.location}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-purple-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Format</p>
-                  <p>{tournament.format}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Trophy className="h-5 w-5 text-purple-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Prize Pool</p>
-                  <p className="text-yellow-400 font-semibold">{tournament.prize || "N/A"}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="h-5 w-5 rounded-full bg-green-500"></div>
-                <div>
-                  <p className="text-sm text-gray-400">Entry Fee</p>
-                  <p className="text-green-400 font-semibold">{tournament.entryFee || "Free"}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {tournament.rules && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2 text-purple-400">Rules & Regulations</h3>
-              <div className="bg-slate-700/50 p-4 rounded-lg">
-                <p className="text-gray-300 whitespace-pre-line">{tournament.rules}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              onClick={() => router.push(`/tournaments/${tournament._id}`)}
-              className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              View Public Page
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4">
+        <TournamentBracket tournamentId={tournamentId} />
+      </section>
     </div>
   );
 }

@@ -1,19 +1,23 @@
 
 import { notFound } from 'next/navigation';
-import { connectDB } from '@/lib/databaseConnection';
-import Category from '@/models/Category';
 import EditCategoryForm from './EditCategoryForm';
+import { serverApiFetch } from '@/lib/serverApiClient';
 
 // Server component to fetch category data
 export default async function EditCategoryPage({ params }) {
   const { id } = await params;
-  await connectDB();
 
-  const category = await Category.findById(id);
+  const response = await serverApiFetch(`/categories/${id}`);
 
-  if (!category) {
+  if (response.status === 404) {
     notFound();
   }
 
-  return <EditCategoryForm category={JSON.parse(JSON.stringify(category))} />;
+  if (!response.ok) {
+    throw new Error("Failed to load category");
+  }
+
+  const data = await response.json();
+
+  return <EditCategoryForm category={data.category} />;
 }

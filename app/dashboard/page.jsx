@@ -1,20 +1,24 @@
 // Disable static generation for this page
-export const dynamicConfig = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import nextDynamic from "next/dynamic";
 
-// Dynamically import the dashboard client component (client-side only)
 const DashboardClient = nextDynamic(() => import("./DashboardClient"), {
   loading: () => (
-    <div className="flex justify-center items-center h-screen bg-slate-900">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-100">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 px-6 py-5 shadow-sm">
+        <div className="flex items-center gap-3 text-sm text-slate-300">
+          <span className="h-3 w-3 animate-pulse rounded-full bg-sky-500" />
+          Loading dashboard...
+        </div>
+      </div>
     </div>
   ),
 });
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <main className="min-h-screen bg-slate-950 text-slate-100">
       <DashboardClient />
     </main>
   );

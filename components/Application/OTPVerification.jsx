@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/input-otp"                             
 import { showToast } from '@/lib/showToast'                     
 import axios from 'axios'                                     
+import { apiUrl, axiosWithCredentials } from '@/lib/apiClient'
 const OTPVerification = ({ email, onSubmit, loading }) => {
   const [isResendingOtp, setIsResendingOtp] = useState(false)  
 
@@ -59,9 +60,11 @@ const OTPVerification = ({ email, onSubmit, loading }) => {
     try {
       setIsResendingOtp(true)
 
-      const { data: resendOtpResponse } = await axios.post('/api/auth/resend-otp', {
-        email,  
-      })
+      const { data: resendOtpResponse } = await axios.post(
+        apiUrl('/auth/resend-otp'),
+        { email },
+        axiosWithCredentials,
+      )
 
       if (!resendOtpResponse.success) {
         throw new Error(resendOtpResponse.message)
@@ -69,7 +72,10 @@ const OTPVerification = ({ email, onSubmit, loading }) => {
 
       showToast('success', resendOtpResponse.message)
     } catch (error) {
-      showToast('error', error.message)
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error.message
+      showToast('error', message || 'Failed to resend OTP')
     } finally {
       setIsResendingOtp(false)
     }

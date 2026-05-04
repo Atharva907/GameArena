@@ -1,0 +1,108 @@
+x-backend-build: &backend-build
+  context: .
+  dockerfile: backend/Dockerfile
+  args:
+    DATABASE_URL: postgresql://${POSTGRES_USER:-gamearena}:${POSTGRES_PASSWORD:-gamearena-dev}@postgres:5432/${POSTGRES_DB:-gamearena}?schema=public
+
+x-backend-env: &backend-env
+  NODE_ENV: production
+  BACKEND_PORT: 4000
+  DATABASE_PROVIDER: postgresql
+  DATABASE_URL: postgresql://${POSTGRES_USER:-gamearena}:${POSTGRES_PASSWORD:-gamearena-dev}@postgres:5432/${POSTGRES_DB:-gamearena}?schema=public
+  FRONTEND_ORIGIN: http://localhost:3000
+  SECRET_KEY: ${SECRET_KEY:-replace-with-a-long-random-secret}
+  JWT_SECRET: ${JWT_SECRET:-replace-with-a-long-random-secret}
+  NEXT_PUBLIC_BASE_URL: http://localhost:3000
+  NEXT_PUBLIC_API_URL: http://localhost:4000/api
+  NODEMAILER_EMAIL: ${NODEMAILER_EMAIL:-dev@example.com}
+  NODEMAILER_PASSWORD: ${NODEMAILER_PASSWORD:-dev}
+  NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY: ${NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY:-dev}
+  IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY:-dev}
+  NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: ${NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT:-https://ik.imagekit.io/dev}
+
+x-frontend-build: &frontend-build
+  context: .
+  dockerfile: Dockerfile
+  args:
+    NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    NEXT_PUBLIC_BASE_URL: http://localhost:3000
+
+x-frontend-env: &frontend-env
+  NEXT_PUBLIC_API_URL: http://localhost:4000/api
+  NEXT_PUBLIC_BASE_URL: http://localhost:3000
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gamearena}
+      POSTGRES_USER: ${POSTGRES_USER:-gamearena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gamearena-dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gamearena} -d ${POSTGRES_DB:-gamearena}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    init: true
+    image: gamearena-backend:latest
+    build: *backend-build
+    restart: unless-stopped
+    environment: *backend-env
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:4000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    command: ["node", "src/server.js"]
+
+  frontend:
+    init: true
+    image: gamearena-frontend:latest
+    build: *frontend-build
+    restart: unless-stopped
+    environment: *frontend-env
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    init: true
+    image: gamearena-backend:latest
+    restart: "no"
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["npm", "run", "db:migrate:deploy"]
+
+volumes:
+  postgres_data:

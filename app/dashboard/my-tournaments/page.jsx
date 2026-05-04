@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar, Trophy, Users, MapPin, Clock, ExternalLink } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getStatusColor } from "@/lib/esportUtils";
+import { formatDate, getStatusColor } from "@/lib/esportUtils";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function MyTournaments() {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchRegisteredTournaments = async () => {
       try {
-        const response = await fetch("/api/player/registrations");
+        const response = await apiFetch("/player/registrations");
         if (!response.ok) {
           throw new Error("Failed to fetch registered tournaments");
         }
@@ -35,109 +35,154 @@ export default function MyTournaments() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="p-3 md:p-4">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4 text-sm text-slate-400">
+          Loading your tournaments...
+        </section>
       </div>
     );
   }
 
   if (tournaments.length === 0) {
     return (
-      <Card className="bg-slate-800 border-slate-700 text-white">
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <Trophy className="h-16 w-16 text-slate-500 mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Tournaments Yet</h3>
-          <p className="text-gray-400 text-center mb-6">You haven't registered for any tournaments yet.</p>
-          <button
-            onClick={() => router.push("/dashboard/tournaments")}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors"
-          >
-            Browse Tournaments
-          </button>
-        </CardContent>
-      </Card>
+      <div className="p-3 md:p-4">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4">
+          <div className="flex items-start gap-3">
+            <Trophy className="mt-0.5 h-10 w-10 text-slate-500" />
+            <div className="space-y-2">
+              <h1 className="text-xl font-semibold text-white">No tournaments yet</h1>
+              <p className="text-sm text-slate-400">
+                You have not registered for any tournaments yet.
+              </p>
+              <Button asChild className="bg-sky-600 text-white hover:bg-sky-500">
+                <Link href="/tournaments">Browse tournaments</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {tournaments.map((tournament) => (
-        <Card key={tournament._id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-slate-800 border-slate-700 text-white h-full flex flex-col">
-          <div className="relative h-40 overflow-hidden">
-            {tournament.imageUrl ? (
-              <img 
-                src={tournament.imageUrl} 
-                alt={tournament.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/assets/images/tournaments/placeholder.jpg";
-                }}
-              />
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 opacity-80"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Trophy className="h-16 w-16 text-white opacity-50" />
+    <div className="space-y-4 p-3 md:p-4">
+      <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-400">
+          My tournaments
+        </p>
+        <h1 className="mt-1 text-xl font-semibold tracking-tight text-white">
+          Registered events
+        </h1>
+        <p className="mt-1 text-sm text-slate-400">
+          Review the tournaments linked to your account.
+        </p>
+      </section>
+
+      <div className="grid gap-3">
+        {tournaments.map((tournament) => (
+          <article
+            key={tournament._id}
+            className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-4"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+              <div className="relative h-24 w-full overflow-hidden rounded-lg border border-slate-800 bg-slate-950/30 lg:h-28 lg:w-36 lg:flex-shrink-0">
+                {tournament.imageUrl ? (
+                  <img
+                    src={tournament.imageUrl}
+                    alt={tournament.name}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/assets/images/tournaments/placeholder.jpg";
+                    }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-950/30">
+                    <Trophy className="h-10 w-10 text-slate-400" />
+                  </div>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-semibold text-white">
+                      {tournament.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-400 line-clamp-2">
+                      {tournament.description}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={getStatusColor(tournament.status)}>{tournament.status}</Badge>
+                    <Badge variant="outline" className="border-slate-700 bg-slate-950/30 text-slate-200">
+                      {tournament.game}
+                    </Badge>
+                  </div>
                 </div>
-              </>
-            )}
-            <div className="absolute top-3 right-3">
-              <Badge className={getStatusColor(tournament.status)}>
-                {tournament.status}
-              </Badge>
-            </div>
-            <div className="absolute top-3 left-3">
-              <Badge variant="outline" className="bg-slate-900/70 text-white border-slate-600">
-                {tournament.game}
-              </Badge>
-            </div>
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl line-clamp-1">{tournament.name}</CardTitle>
-            <CardDescription className="text-gray-300 text-sm line-clamp-2">
-              {tournament.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow space-y-3 text-sm">
-            <div className="flex items-center gap-2 text-gray-300">
-              <Calendar className="h-4 w-4" />
-              <span>{tournament.startDate} - {tournament.endDate}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-300">
-              <Clock className="h-4 w-4" />
-              <span>{tournament.startTime} - {tournament.endTime}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-300">
-              <MapPin className="h-4 w-4" />
-              <span>{tournament.location}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-300">
-              <Users className="h-4 w-4" />
-              <span>{tournament.format}</span>
-            </div>
-            <div className="pt-2 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Entry Fee</span>
-                <span className="font-semibold text-green-400">{tournament.entryFee || "Free"}</span>
+
+                <div className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {tournament.startDate} - {tournament.endDate}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {tournament.startTime} - {tournament.endTime}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{tournament.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <span>{tournament.format}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Entry fee
+                    </p>
+                    <p className="mt-1 font-medium text-emerald-300">
+                      {tournament.entryFee || "Free"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Prize pool
+                    </p>
+                    <p className="mt-1 font-medium text-amber-300">
+                      {tournament.prize || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Joined
+                    </p>
+                    <p className="mt-1 text-white">{formatDate(tournament.joinedAt || tournament.createdAt)}</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Prize Pool</span>
-                <span className="font-semibold text-yellow-400">{tournament.prize || "N/A"}</span>
-              </div>
             </div>
-          </CardContent>
-          <div className="p-4 pt-0">
-            <button
-              onClick={() => router.push(`/tournaments/${tournament._id}`)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
-            >
-              <ExternalLink className="h-4 w-4" />
-              View Details
-            </button>
-          </div>
-        </Card>
-      ))}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button asChild className="bg-sky-600 text-white hover:bg-sky-500">
+                <Link href={`/dashboard/my-tournaments/${tournament._id}`}>
+                  <ExternalLink className="h-4 w-4" />
+                  View details
+                </Link>
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }

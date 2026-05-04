@@ -1,29 +1,40 @@
+"use client";
 
-'use client';
-
-import { useState } from 'react';
+import { useState } from "react";
+import { ImagePlus, Loader2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/apiClient";
+import { showToast } from "@/lib/showToast";
+import {
+  adminFieldClass,
+  adminGhostButtonClass,
+  adminPrimaryButtonClass,
+} from "@/components/Application/Admin/AdminUi";
 
 const TournamentImageSelector = ({ value, onChange }) => {
   const [showImageSelector, setShowImageSelector] = useState(false);
-  const [cloudinaryImages, setCloudinaryImages] = useState([]);
+  const [libraryImages, setLibraryImages] = useState([]);
   const [imageLoading, setImageLoading] = useState(false);
 
-  const fetchCloudinaryImages = async () => {
+  const fetchLibraryImages = async () => {
     setImageLoading(true);
+
     try {
-      const response = await fetch('/api/cloudinary-images');
+      const response = await apiFetch("/media/library");
+
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Error response from API:', errorData);
-        const errorMessage = errorData.details || errorData.error || 'Failed to fetch images';
+        const errorMessage =
+          errorData.details || errorData.error || "Failed to fetch images";
         throw new Error(errorMessage);
       }
+
       const data = await response.json();
-      setCloudinaryImages(data.resources || []);
+      setLibraryImages(data.resources || []);
       setShowImageSelector(true);
-    } catch (err) {
-      console.error('Error fetching images:', err);
-      alert(`Failed to load images from Cloudinary: ${err.message}`);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      showToast("error", `Failed to load images: ${error.message}`);
     } finally {
       setImageLoading(false);
     }
@@ -36,108 +47,116 @@ const TournamentImageSelector = ({ value, onChange }) => {
 
   return (
     <div className="space-y-2">
-      <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor="imageUrl" className="text-sm font-medium text-foreground">
         Tournament Image
       </label>
+      <p className="text-sm text-muted-foreground">
+        Paste a direct image URL or pick an existing asset from ImageKit.
+      </p>
 
-      <div className="flex flex-col space-y-3">
-        <div className="flex space-x-2">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             type="text"
             id="imageUrl"
             name="imageUrl"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+            value={value || ""}
+            onChange={(event) => onChange(event.target.value)}
+            className={`w-full ${adminFieldClass}`}
             placeholder="Enter image URL"
           />
-          <button
+          <Button
             type="button"
-            onClick={fetchCloudinaryImages}
+            onClick={fetchLibraryImages}
             disabled={imageLoading}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors duration-200 flex items-center disabled:opacity-50"
+            className={`${adminPrimaryButtonClass} h-11 gap-2 px-5`}
           >
             {imageLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Loader2 className="size-4 animate-spin" />
                 Loading...
               </>
             ) : (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Select
+                <ImagePlus className="size-4" />
+                Open Library
               </>
             )}
-          </button>
+          </Button>
         </div>
 
-        {/* Image Preview */}
         {value && (
-          <div className="relative rounded-lg overflow-hidden shadow-md w-48 h-32">
-            <img
-              src={value}
-              alt="Tournament preview"
-              className="w-full h-full object-cover"
-            />
-            <button
-              type="button"
-              onClick={() => onChange('')}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors duration-200"
-              aria-label="Remove image"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+          <div className="overflow-hidden rounded-[24px] border border-border/60 bg-muted/20">
+            <div className="relative aspect-[16/9] w-full max-w-xl">
+              <img
+                src={value}
+                alt="Tournament preview"
+                className="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                className="absolute right-3 top-3 rounded-full border border-white/15 bg-slate-950/70 p-2 text-white backdrop-blur transition hover:bg-slate-950/90"
+                aria-label="Remove image"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Image Selector Modal */}
       {showImageSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-y-auto w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Select an Image</h2>
-              <button
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-5xl overflow-hidden rounded-[28px] border border-border/60 bg-background shadow-[0_28px_100px_-50px_rgba(15,23,42,0.9)]">
+            <div className="flex items-center justify-between border-b border-border/60 px-5 py-4 sm:px-6">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Select tournament artwork</h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose an existing asset instead of pasting the URL manually.
+                </p>
+              </div>
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setShowImageSelector(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className={`${adminGhostButtonClass} rounded-full`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                Close
+              </Button>
             </div>
 
-            {cloudinaryImages.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {cloudinaryImages.map((image) => (
-                  <div
-                    key={image.public_id}
-                    className="relative group cursor-pointer rounded-lg overflow-hidden"
-                    onClick={() => selectImage(image.secure_url)}
+            {libraryImages.length > 0 ? (
+              <div className="grid max-h-[70vh] grid-cols-2 gap-4 overflow-y-auto p-5 sm:grid-cols-3 lg:grid-cols-4 sm:p-6">
+                {libraryImages.map((image) => (
+                  <button
+                    key={image.fileId}
+                    type="button"
+                    className="group overflow-hidden rounded-[22px] border border-border/60 bg-muted/20 text-left transition hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-muted/35"
+                    onClick={() => selectImage(image.url || image.thumbnailUrl)}
                   >
-                    <img
-                      src={image.secure_url}
-                      alt={image.public_id}
-                      className="w-full h-32 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-200 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={image.url || image.thumbnailUrl}
+                        alt={image.filePath || image.fileId}
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      />
                     </div>
-                  </div>
+                    <div className="px-4 py-3">
+                      <p className="line-clamp-1 text-sm font-medium text-foreground">
+                        {image.filePath || image.fileId}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Click to use this image
+                      </p>
+                    </div>
+                  </button>
                 ))}
               </div>
             ) : (
-              <p className="text-center py-8 text-gray-500 dark:text-gray-400">No images found in your Cloudinary account</p>
+              <p className="px-6 py-12 text-center text-sm text-muted-foreground">
+                No images found in the ImageKit library.
+              </p>
             )}
           </div>
         </div>

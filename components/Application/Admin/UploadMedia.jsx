@@ -1,84 +1,113 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { showToast } from "@/lib/showToast";
-import { CldUploadWidget } from "next-cloudinary";
+import axios from "axios";
+import { useRef, useState } from "react";
 import { FaPlus } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { adminPrimaryButtonClass } from "@/components/Application/Admin/AdminUi";
+import { apiFetch, apiUrl, axiosWithCredentials } from "@/lib/apiClient";
+import { showToast } from "@/lib/showToast";
 
-const UploadMedia = ({ isMultiple = true, onUploadSuccess }) => {
-  const handleOnError = (error) => {
-    const message =
-      error?.message || error?.statusText || "Unknown Cloudinary upload error";
-    showToast("error", message);
+const UploadMedia = ({ isMultiple = true, onUploadSuccess, disabled = false }) => {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiFetch("/media/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || data.error || "Upload failed");
+    }
+
+    return data.data;
   };
 
-  const handleOnSuccess = (result) => {
-    showToast("success", "Upload successful!");
-  };
+  const handleFiles = async (event) => {
+    if (disabled) {
+      showToast(
+        "error",
+        "ImageKit is not configured. Add credentials before uploading media.",
+      );
+      event.target.value = "";
+      return;
+    }
 
-  const handleOnQueueEnd = async (results) => {
-    const files = results.info.files 
-    const uploadedFiles = files.filter(file => file.uploadInfo).map(file => ({
-      asset_id: file.uploadInfo.asset_id ,
-      public_id: file.uploadInfo.public_id ,
-      secure_url: file.uploadInfo.secure_url ,
-      path: file.uploadInfo.path ,
-      thumbnail_url: file.uploadInfo.thumbnail_url ,
-    }))
-    
-    if(uploadedFiles.length > 0) {
-      try {
-        const { data: mediaUploadResponse } = await axios.post('api/media/create', uploadedFiles)
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
 
-        if(!mediaUploadResponse.success){
-          throw new Error(mediaUploadResponse.message)
-        }
+    try {
+      setUploading(true);
+      const uploadedFiles = await Promise.all(files.map(uploadFile));
+      const mediaPayload = uploadedFiles.map((file) => ({
+        fileId: file.fileId,
+        filePath: file.filePath,
+        url: file.url || file.path,
+        thumbnailUrl: file.thumbnailUrl || file.url || file.path,
+        fileType: file.fileType,
+        mimeType: file.mimeType,
+        size: file.size,
+        width: file.width,
+        height: file.height,
+      }));
 
-        showToast("success", mediaUploadResponse.message)
-        
-        // Call the callback to refresh the media library
-        if (onUploadSuccess) {
-          onUploadSuccess();
-        }
+      const { data: mediaUploadResponse } = await axios.post(
+        apiUrl("/media/create"),
+        mediaPayload,
+        axiosWithCredentials,
+      );
 
-      } catch (error) {
-        showToast("error", error.message)
+      if (!mediaUploadResponse.success) {
+        throw new Error(mediaUploadResponse.message);
       }
+
+      showToast("success", mediaUploadResponse.message);
+
+      if (onUploadSuccess) {
+        onUploadSuccess();
+      }
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error.message;
+      showToast("error", message || "Upload failed");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center py-1">
-      
-      <CldUploadWidget
-        signatureEndpoint="/api/cloudinary-signature"
-        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPDATE_PRESET}
-        onError={handleOnError}
-        onUpload={handleOnSuccess}
-        onQueuesEnd={handleOnQueueEnd}
-        config={{
-          cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-          apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-        }}
-        options={{
-          multiple: isMultiple,
-          folder: "yt-nextjs-ecommerce",
-          sources: ["local", "url", "unsplash", "google_drive"],
-          resourceType: "image",
-          clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
-        }}
+    <div className="flex flex-col items-start justify-center gap-3 py-1">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple={isMultiple}
+        className="hidden"
+        onChange={handleFiles}
+      />
+      <Button
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading || disabled}
+        className={`${adminPrimaryButtonClass} h-11 gap-2 px-5 text-sm font-medium shadow-none`}
       >
-        {({ open }) => (
-          <Button
-            onClick={() => open?.()}
-            className="flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow"
-            style={{ fontSize: "1rem" }}
-          >
-            <FaPlus className="text-lg" />
-            <span>Upload Media</span>
-          </Button>
-        )}
-      </CldUploadWidget>
+        <FaPlus className="text-sm" />
+        <span>{disabled ? "ImageKit not configured" : uploading ? "Uploading..." : "Upload Media"}</span>
+      </Button>
+
+      <p className="text-sm text-muted-foreground">
+        {disabled
+          ? "Set the ImageKit credentials in your environment to enable uploads."
+          : "Upload polished storefront and tournament assets in one place."}
+      </p>
     </div>
   );
 };

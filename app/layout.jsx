@@ -1,7 +1,7 @@
-import GlobalProvider from "@/components/Application/GlobalProviderNew";
+import GlobalProvider from "@/components/Application/GlobalProvider";
 import "./globals.css";
 import { Assistant } from 'next/font/google'
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 
 const assistantFont = Assistant({
   weight: ['400','500','600','700','800'],

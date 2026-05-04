@@ -24,12 +24,18 @@ import Link from "next/link";
 import { WEBSITE_LOGIN } from "@/routes/WebsiteRoute";
 import axios from "axios";
 import { showToast } from "@/lib/showToast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { apiUrl, axiosWithCredentials } from "@/lib/apiClient";
 
 const RegisterPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [registrationEmailSent, setRegistrationEmailSent] = useState(true);
+  const [registrationMessage, setRegistrationMessage] = useState("");
 
   const formSchema = zSchema
     .pick({ name: true, email: true, password: true })
@@ -53,17 +59,22 @@ const RegisterPage = () => {
     try {
       setLoading(true);
       const { data: registerResponse } = await axios.post(
-        "/api/auth/register",
-        values
+        apiUrl("/auth/register"),
+        values,
+        axiosWithCredentials,
       );
 
       if (!registerResponse.success) {
         throw new Error(registerResponse.message);
       }
 
+      const emailSent = registerResponse.data?.emailSent !== false;
       form.reset();
-      showToast("success", registerResponse.message);
-      // router.push("/");
+      showToast(emailSent ? "success" : "warning", registerResponse.message);
+      setRegisteredEmail(values.email);
+      setRegistrationEmailSent(emailSent);
+      setRegistrationMessage(registerResponse.message || "");
+      setRegistrationComplete(true);
     } catch (error) {
       let message = "Something went wrong";
       if (axios.isAxiosError(error)) {
@@ -76,6 +87,97 @@ const RegisterPage = () => {
       setLoading(false);
     }
   };
+
+  if (registrationComplete) {
+    return (
+      <div className="relative min-h-screen w-full flex items-center justify-center">
+        <div className="absolute inset-0 -z-10">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src="/assets/angel-sage.3840x2160.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <div className="absolute inset-0 bg-black/40 -z-10"></div>
+
+        <div className="relative z-10 flex items-center justify-center w-full px-4">
+          <Card className="w-full max-w-md bg-white/90 backdrop-blur-md shadow-xl">
+            <CardContent className="space-y-4 py-8 text-center">
+              <Image
+                src={Logo.src}
+                width={Logo.width}
+                height={Logo.height}
+                alt="logo"
+                className="mx-auto max-w-[150px]"
+              />
+              <h1 className="text-3xl font-bold">
+                {registrationEmailSent ? "Check your email" : "Account created"}
+              </h1>
+              <p className="text-gray-700">
+                {registrationEmailSent ? (
+                  <>
+                    Your account has been created. A verification link has been sent to{" "}
+                    <strong>{registeredEmail}</strong>.
+                  </>
+                ) : (
+                  <>
+                    Your account has been created, but the verification email could not be sent to{" "}
+                    <strong>{registeredEmail}</strong>. You can log in and request a new
+                    verification link.
+                  </>
+                )}
+              </p>
+              <p className="text-sm text-gray-600">
+                {registrationEmailSent
+                  ? "After verifying your email, continue to sign in and complete OTP verification."
+                  : "Use the login page to request a new verification link, then complete OTP verification after your email is verified."}
+              </p>
+              {registrationMessage ? (
+                <p
+                  className={`text-sm ${
+                    registrationEmailSent ? "text-gray-600" : "text-amber-700"
+                  }`}
+                >
+                  {registrationMessage}
+                </p>
+              ) : null}
+              <div className="flex flex-col gap-3 pt-2">
+                <ButtonLoading
+                  loading={false}
+                  type="button"
+                  text="Go to Login"
+                  className="w-full cursor-pointer"
+                  onClick={() => {
+                    const emailQuery = registeredEmail
+                      ? `?email=${encodeURIComponent(registeredEmail)}`
+                      : "";
+                    const callback = searchParams.get("callback");
+                    const callbackQuery = callback
+                      ? `${emailQuery ? "&" : "?"}callback=${encodeURIComponent(callback)}`
+                      : "";
+                    router.push(`${WEBSITE_LOGIN}${emailQuery}${callbackQuery}`);
+                  }}
+                />
+                <ButtonLoading
+                  loading={false}
+                  type="button"
+                  text="Back to Home"
+                  className="w-full cursor-pointer bg-slate-800 hover:bg-slate-700"
+                  onClick={() => router.push("/")}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center">

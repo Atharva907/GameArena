@@ -1,0 +1,362 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER   @map("user")
+  ADMIN  @map("admin")
+}
+
+enum TournamentStatus {
+  UPCOMING  @map("upcoming")
+  LIVE      @map("live")
+  COMPLETED @map("completed")
+}
+
+enum TournamentFormat {
+  SOLO  @map("Solo")
+  DUO   @map("Duo")
+  SQUAD @map("Squad")
+}
+
+enum TournamentPlatform {
+  MOBILE  @map("Mobile")
+  PC      @map("PC")
+  CONSOLE @map("Console")
+}
+
+enum BracketStatus {
+  NOT_GENERATED @map("not_generated")
+  GENERATED     @map("generated")
+  IN_PROGRESS   @map("in_progress")
+  COMPLETED     @map("completed")
+}
+
+enum TransactionStatus {
+  PENDING   @map("pending")
+  COMPLETED @map("completed")
+  FAILED    @map("failed")
+  REFUNDED  @map("refunded")
+}
+
+enum OrderStatus {
+  PENDING    @map("pending")
+  CONFIRMED  @map("confirmed")
+  PROCESSING @map("processing")
+  SHIPPED    @map("shipped")
+  DELIVERED  @map("delivered")
+  CANCELLED  @map("cancelled")
+}
+
+enum PaymentMethod {
+  WALLET @map("wallet")
+}
+
+enum PaymentStatus {
+  PENDING   @map("pending")
+  COMPLETED @map("completed")
+  FAILED    @map("failed")
+  REFUNDED  @map("refunded")
+}
+
+enum RefundStatus {
+  NONE     @map("none")
+  REFUNDED @map("refunded")
+}
+
+enum MatchStatus {
+  SCHEDULED @map("scheduled")
+  LIVE      @map("live")
+  COMPLETED @map("completed")
+  CANCELLED @map("cancelled")
+}
+
+enum WinnerSide {
+  A   @map("A")
+  B   @map("B")
+  TBD @map("TBD")
+}
+
+enum OtpPurpose {
+  EMAIL_VERIFY   @map("email_verify")
+  LOGIN          @map("login")
+  PASSWORD_RESET @map("password_reset")
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  role            UserRole  @default(USER)
+  name            String
+  email           String    @unique
+  password        String
+  avatar          Json?
+  isEmailVerified Boolean   @default(false)
+  phone           String?
+  address         String?
+  deletedAt       DateTime? @db.Timestamptz(6)
+  sessionVersion  Int       @default(0)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  player          Player?
+
+  @@map("users")
+  @@index([deletedAt])
+}
+
+model Player {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String?   @unique @db.Uuid
+  fullName       String
+  username       String    @unique
+  email          String    @unique
+  phoneNumber    String
+  dateOfBirth    DateTime  @db.Timestamptz(6)
+  favoriteGame   String
+  city           String
+  state          String
+  country        String
+  walletBalance  Int       @default(0)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  transactions   PlayerTransaction[]
+  registrations  GameTournamentRegistration[]
+  orders         Order[]
+
+  @@map("players")
+}
+
+model PlayerTransaction {
+  id            String            @id @default(uuid()) @db.Uuid
+  transactionId String?           @unique
+  playerId      String            @db.Uuid
+  date          DateTime          @default(now()) @db.Timestamptz(6)
+  type          String
+  amount        Int
+  status        TransactionStatus @default(COMPLETED)
+  method        String?
+  description   String?
+  tournamentId  String?           @db.Uuid
+  orderId       String?           @db.Uuid
+
+  player        Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  tournament    Tournament?       @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+  order         Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@map("player_transactions")
+  @@index([playerId, date(sort: Desc)])
+  @@index([transactionId])
+}
+
+model Tournament {
+  id                 String          @id @default(uuid()) @db.Uuid
+  name               String
+  game               String
+  description        String          @db.Text
+  startDate          String
+  endDate            String
+  startTime          String
+  endTime            String
+  location           String
+  maxParticipants    Int
+  currentParticipants Int             @default(0)
+  status             TournamentStatus @default(UPCOMING)
+  entryFee           String          @default("Free")
+  region             String          @default("Global")
+  format             TournamentFormat @default(SOLO)
+  platform           TournamentPlatform @default(PC)
+  prize              String
+  rules              String          @db.Text
+  imageUrl           String          @default("")
+  bracketStatus      BracketStatus   @default(NOT_GENERATED)
+  matchCount         Int             @default(0)
+  createdAt          DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime        @updatedAt @db.Timestamptz(6)
+
+  registrations      GameTournamentRegistration[]
+  matches            TournamentMatch[]
+  transactions       PlayerTransaction[]
+
+  @@map("tournaments")
+}
+
+model GameTournamentRegistration {
+  id              String     @id @default(uuid()) @db.Uuid
+  tournamentId    String     @db.Uuid
+  playerId        String?    @db.Uuid
+  playerEmail     String
+  playerName      String
+  dateOfBirth     String
+  city            String
+  state           String
+  teamName        String?
+  contactNumber   String?
+  paid            Boolean    @default(true)
+  registrationDate DateTime   @default(now()) @db.Timestamptz(6)
+  createdAt       DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime   @updatedAt @db.Timestamptz(6)
+
+  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player          Player?    @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  wonMatches      TournamentMatch[]
+
+  @@unique([tournamentId, playerEmail])
+  @@index([playerEmail])
+  @@index([tournamentId])
+  @@map("tournament_registrations")
+}
+
+model Category {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String    @unique
+  description String?
+  isFeatured  Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  description String    @db.Text
+  price       Int
+  categoryId  String    @db.Uuid
+  image       String
+  inStock     Int
+  isFeatured  Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+model Order {
+  id              String        @id @default(uuid()) @db.Uuid
+  orderNumber     String?       @unique
+  idempotencyKey  String?       @unique
+  playerId        String       @db.Uuid
+  totalAmount     Int
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod @default(WALLET)
+  paymentStatus   PaymentStatus @default(PENDING)
+  refundStatus    RefundStatus  @default(NONE)
+  refundedAmount  Int           @default(0)
+  shippingAddress Json?
+  cancelledAt     DateTime?     @db.Timestamptz(6)
+  deliveredAt     DateTime?     @db.Timestamptz(6)
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(6)
+
+  player          Player        @relation(fields: [playerId], references: [id], onDelete: Restrict)
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+  transactions    PlayerTransaction[]
+
+  @@index([playerId, createdAt(sort: Desc)])
+  @@map("orders")
+}
+
+model OrderItem {
+  id            String   @id @default(uuid()) @db.Uuid
+  orderId       String   @db.Uuid
+  productId     String   @db.Uuid
+  quantity      Int
+  price         Int
+  nameSnapshot  String   @default("")
+  imageSnapshot String   @default("")
+
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @db.Uuid
+  status     String
+  changedAt  DateTime @default(now()) @db.Timestamptz(6)
+  changedBy  String   @default("system")
+  note       String   @default("")
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, changedAt(sort: Desc)])
+  @@map("order_status_history")
+}
+
+model Otp {
+  id         String      @id @default(uuid()) @db.Uuid
+  email      String
+  purpose    OtpPurpose
+  otpHash    String
+  expiresAt  DateTime    @db.Timestamptz(6)
+  attempts   Int         @default(0)
+  verifiedAt DateTime?   @db.Timestamptz(6)
+  createdAt  DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime    @updatedAt @db.Timestamptz(6)
+
+  @@unique([email, purpose])
+  @@index([expiresAt])
+  @@map("otps")
+}
+
+model Media {
+  id            String    @id @default(uuid()) @db.Uuid
+  fileId        String    @map("assetId")
+  filePath      String    @map("publicId")
+  url           String    @map("path")
+  thumbnailUrl  String
+  alt           String?
+  title         String?
+  deletedAt     DateTime? @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([deletedAt])
+  @@map("medias")
+}
+
+model TournamentMatch {
+  id                  String      @id @default(uuid()) @db.Uuid
+  tournamentId        String      @db.Uuid
+  round               Int
+  matchNumber         Int
+  bracketPosition     Int         @default(0)
+  participantA        Json?
+  participantB        Json?
+  scheduledAt         DateTime?   @db.Timestamptz(6)
+  status              MatchStatus @default(SCHEDULED)
+  scoreA              Int         @default(0)
+  scoreB              Int         @default(0)
+  winnerSide          WinnerSide  @default(TBD)
+  winnerRegistrationId String?    @db.Uuid
+  resultVerified      Boolean     @default(false)
+  notes               String      @default("")
+  createdAt           DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime    @updatedAt @db.Timestamptz(6)
+
+  tournament          Tournament                @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  winnerRegistration  GameTournamentRegistration? @relation(fields: [winnerRegistrationId], references: [id], onDelete: SetNull)
+
+  @@unique([tournamentId, round, matchNumber])
+  @@index([tournamentId, round])
+  @@map("tournament_matches")
+}

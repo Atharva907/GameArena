@@ -1,128 +1,227 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Wallet, Plus, Minus, History } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Wallet, History, ArrowUpRight } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function WalletCard() {
+  const router = useRouter();
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [showTransactions, setShowTransactions] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [sessionUser, setSessionUser] = useState(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const { auth } = useAuth();
+  const walletEmail = auth?.email || sessionUser?.email;
+  const needsProfile = errorMessage.toLowerCase().includes("profile");
 
   useEffect(() => {
-    fetchWalletData();
-  }, [auth]);
+    let isMounted = true;
+
+    const fetchSessionUser = async () => {
+      try {
+        const response = await apiFetch("/user/me");
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && isMounted) {
+          setSessionUser(data.data || data);
+        }
+      } catch {
+        // ignore session fetch issues here; the dashboard guard already handles auth
+      } finally {
+        if (isMounted) {
+          setCheckingSession(false);
+        }
+      }
+    };
+
+    fetchSessionUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!checkingSession) {
+      fetchWalletData();
+    }
+  }, [walletEmail, checkingSession]);
 
   const fetchWalletData = async () => {
     try {
-      if (!auth?.email) return;
+      if (!walletEmail) {
+        setErrorMessage("Sign in to access your wallet.");
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
-      const response = await fetch(`/api/players/wallet?email=${auth.email}`);
+      setErrorMessage("");
+
+      const response = await apiFetch(
+        `/wallet?email=${encodeURIComponent(walletEmail)}`,
+      );
       const data = await response.json();
 
       if (response.ok) {
-        setWalletBalance(data.walletBalance);
+        setWalletBalance(data.balance);
         setTransactions(data.transactions || []);
+      } else {
+        setWalletBalance(0);
+        setTransactions([]);
+        setErrorMessage(data.error || "Failed to load wallet data.");
       }
-    } catch (error) {
-      console.error('Error fetching wallet data:', error);
+    } catch {
+      setWalletBalance(0);
+      setTransactions([]);
+      setErrorMessage("Failed to load wallet data.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddFunds = async () => {
-    const amount = prompt('Enter amount to add:');
-    if (amount && !isNaN(amount) && Number(amount) > 0) {
-      try {
-        const response = await fetch('/api/players/wallet', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: auth.email,
-            amount: Number(amount),
-            description: 'Wallet top-up'
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setWalletBalance(data.walletBalance);
-          alert('Funds added successfully!');
-        } else {
-          alert('Failed to add funds');
-        }
-      } catch (error) {
-        console.error('Error adding funds:', error);
-        alert('Failed to add funds');
-      }
+  const handleOpenWallet = () => {
+    if (!walletEmail) {
+      setErrorMessage("Sign in to access your wallet.");
+      return;
     }
+
+    if (needsProfile) {
+      router.push(
+        `/dashboard/my-account?callback=${encodeURIComponent("/dashboard/wallet")}`,
+      );
+      return;
+    }
+
+    router.push("/dashboard/wallet");
   };
 
+  if (checkingSession) {
+    return (
+      <section className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 shadow-sm">
+        <p className="text-sm text-slate-400">Checking wallet session...</p>
+      </section>
+    );
+  }
+
   return (
-    <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 text-white shadow-xl overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600"></div>
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-xl flex items-center gap-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-          <div className="p-1.5 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg">
-            <Wallet className="h-4 w-4 text-white" />
+    <section className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 shadow-sm">
+      <div className="absolute inset-x-0 top-0 h-px bg-sky-500" />
+      <div className="flex flex-row items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/20">
+            <Wallet className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Wallet balance</h3>
+            <p className="text-xs text-slate-400">Funds available for entries and orders.</p>
           </div>
-          Wallet Balance
-        </CardTitle>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="border-purple-500/50 text-purple-300 hover:bg-purple-600/20 hover:border-purple-500 transition-all duration-300"
-          onClick={() => setShowTransactions(!showTransactions)}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-slate-700 bg-slate-950/30 text-slate-200 hover:bg-slate-800"
+          onClick={() => setShowTransactions((value) => !value)}
         >
           <History className="h-4 w-4" />
+          {showTransactions ? "Hide activity" : "Activity"}
         </Button>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold mb-4">
-          {loading ? 'Loading...' : formatCurrency(walletBalance)}
+      </div>
+
+      <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Available balance
+        </p>
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <p className="text-xl font-semibold tracking-tight text-white">
+            {loading ? "Loading..." : formatCurrency(walletBalance)}
+          </p>
+          <Badge
+            variant="outline"
+            className="border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+          >
+            Active
+          </Badge>
         </div>
+      </div>
 
-        <Button 
-          onClick={handleAddFunds}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+      {errorMessage && (
+        <div
+          className={`mt-3 rounded-xl border px-3 py-2 text-sm ${
+            needsProfile
+              ? "border-amber-500/20 bg-amber-500/10 text-amber-200"
+              : "border-rose-500/20 bg-rose-500/10 text-rose-200"
+          }`}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Funds
-        </Button>
+          {errorMessage}
+        </div>
+      )}
 
-        {showTransactions && (
-          <div className="mt-4 space-y-2">
-            <h4 className="text-sm font-medium text-gray-400">Recent Transactions</h4>
-            {transactions.length === 0 ? (
-              <p className="text-sm text-gray-500">No transactions yet</p>
-            ) : (
-              transactions.slice(-5).reverse().map((transaction, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-slate-700/30 rounded">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={transaction.type === 'deposit' ? 'default' : 'secondary'}>
-                      {transaction.type}
-                    </Badge>
-                    <span className="text-sm text-gray-400">{transaction.description}</span>
+      <Button
+        onClick={handleOpenWallet}
+        disabled={loading || !walletEmail || (!!errorMessage && !needsProfile)}
+        className="mt-3 w-full bg-sky-600 text-white hover:bg-sky-500"
+      >
+        <ArrowUpRight className="h-4 w-4" />
+        {needsProfile ? "Complete Profile" : "Open Wallet"}
+      </Button>
+
+      {showTransactions && (
+        <div className="mt-3 space-y-2.5">
+          <h4 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Recent transactions
+          </h4>
+          {transactions.length === 0 ? (
+            <p className="text-sm text-slate-500">No transactions yet.</p>
+          ) : (
+            transactions.slice(0, 5).map((transaction, index) => {
+              const positive = Number(transaction.amount || 0) > 0;
+
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/30 px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={
+                          positive
+                            ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                            : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+                        }
+                      >
+                        {transaction.type || "Transaction"}
+                      </Badge>
+                    </div>
+                    <p className="mt-1.5 truncate text-sm text-slate-300">
+                      {transaction.description || "Wallet activity"}
+                    </p>
                   </div>
-                  <span className={`font-medium ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
+
+                  <span
+                    className={`whitespace-nowrap font-semibold ${
+                      positive ? "text-emerald-300" : "text-rose-300"
+                    }`}
+                  >
+                    {positive ? "+" : ""}
+                    {formatCurrency(transaction.amount || 0)}
                   </span>
                 </div>
-              ))
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              );
+            })
+          )}
+        </div>
+      )}
+    </section>
   );
 }

@@ -8,17 +8,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, MapPin, Users, Trophy, AlertCircle, CheckCircle, CreditCard } from "lucide-react";
+import { Calendar, MapPin, Users, Trophy, AlertCircle, Wallet } from "lucide-react";
+import { apiFetch } from "@/lib/apiClient";
+import { formatCurrency } from "@/lib/utils";
+
+const parseEntryFee = (entryFee) => {
+  if (!entryFee || entryFee === "Free") return 0;
+  const parsed = Number.parseFloat(String(entryFee).replace(/[^0-9.-]+/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 export default function TournamentRegistration() {
   const router = useRouter();
   const params = useParams();
   const tournamentId = params.id;
+  const registrationPath = tournamentId ? `/tournaments/${tournamentId}/register` : "/tournaments";
+  const loginCallback = tournamentId
+    ? `/auth/login?callback=${encodeURIComponent(registrationPath)}`
+    : "/auth/login";
 
   // State for user data
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
+  const [sessionErrorMessage, setSessionErrorMessage] = useState("");
+  const [profileRequiredMessage, setProfileRequiredMessage] = useState("");
 
   // State for tournament data
   const [tournament, setTournament] = useState(null);
@@ -42,29 +55,65 @@ export default function TournamentRegistration() {
   // UI states
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletError, setWalletError] = useState("");
+
+  const entryFeeAmount = parseEntryFee(tournament?.entryFee);
+  const isWalletSufficient = walletBalance >= entryFeeAmount;
 
   // Fetch user data on component mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("/api/user/me");
+        const response = await apiFetch("/user/me");
         if (response.ok) {
           const userData = await response.json();
-          setUser(userData.data || userData);
+          const normalizedUser = userData.data || userData;
+          setUser(normalizedUser);
+          setSessionErrorMessage("");
 
-          // Pre-fill email
-          if (userData.email) {
-            setPlayerDetails(prev => ({ ...prev, email: userData.email }));
+          if (normalizedUser.email) {
+            setPlayerDetails(prev => ({ ...prev, email: normalizedUser.email }));
+
+            const playerResponse = await apiFetch(
+              `/player?email=${encodeURIComponent(normalizedUser.email)}`,
+            );
+
+            if (playerResponse.ok) {
+              const playerProfile = await playerResponse.json();
+              setProfileRequiredMessage("");
+              setWalletError("");
+              setPlayerDetails(prev => ({
+                ...prev,
+                fullName: playerProfile.fullName || prev.fullName,
+                dateOfBirth: playerProfile.dateOfBirth
+                  ? new Date(playerProfile.dateOfBirth).toISOString().slice(0, 10)
+                  : prev.dateOfBirth,
+                city: playerProfile.city || prev.city,
+                state: playerProfile.state || prev.state,
+                email: playerProfile.email || normalizedUser.email,
+              }));
+              setWalletBalance(Number(playerProfile.walletBalance ?? 0));
+            } else {
+              setProfileRequiredMessage(
+                "Complete your profile before registering. Tournament fees are deducted from your wallet profile.",
+              );
+              setWalletBalance(0);
+            }
           }
-        } else {
+        } else if (response.status === 401 || response.status === 403) {
           // User not authenticated, redirect to login
-          router.push("/auth/login");
+          router.replace(loginCallback);
+          return;
+        } else {
+          setSessionErrorMessage(
+            "Unable to verify your session right now. Please try again later.",
+          );
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        router.push("/auth/login");
+        setSessionErrorMessage("Unable to verify your session right now. Please try again later.");
       } finally {
         setUserLoading(false);
       }
@@ -77,7 +126,7 @@ export default function TournamentRegistration() {
   useEffect(() => {
     const fetchTournament = async () => {
       try {
-        const response = await fetch(`/api/tournaments/${tournamentId}`);
+        const response = await apiFetch(`/tournaments/${tournamentId}`);
         if (response.ok) {
           const data = await response.json();
           setTournament(data.data || data);
@@ -103,7 +152,9 @@ export default function TournamentRegistration() {
 
     const checkRegistration = async () => {
       try {
-        const response = await fetch(`/api/registration/check?tournamentId=${tournamentId}&email=${user.email}`);
+        const response = await apiFetch(
+          `/registration/check?tournamentId=${tournamentId}&email=${encodeURIComponent(user.email)}`,
+        );
         if (response.ok) {
           const data = await response.json();
           setIsAlreadyRegistered(data.isRegistered);
@@ -138,30 +189,41 @@ export default function TournamentRegistration() {
   const handlePlayerDetailsSubmit = (e) => {
     e.preventDefault();
     // Move to next step
-    setCurrentStep(3);
+    setCurrentStep(2);
   };
 
-  // Handle payment
-  const handlePayment = () => {
-    setIsLoading(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsPaymentDialogOpen(true);
-      // Move to next step after payment
-      setTimeout(() => {
-        setIsPaymentDialogOpen(false);
-        setCurrentStep(5);
-      }, 2000);
-    }, 1500);
+  // Handle wallet review
+  const handleWalletReview = () => {
+    if (entryFeeAmount > 0 && !isWalletSufficient) {
+      setWalletError(
+        `Your wallet balance is ${formatCurrency(walletBalance)}. Add ${formatCurrency(
+          entryFeeAmount - walletBalance,
+        )} or more to continue.`,
+      );
+      return;
+    }
+
+    setWalletError("");
+    setCurrentStep(3);
   };
 
   // Handle tournament registration
   const handleRegistration = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setWalletError("");
 
-    // Log registration data
+    if (entryFeeAmount > 0 && !isWalletSufficient) {
+      setIsLoading(false);
+      setCurrentStep(2);
+      setWalletError(
+        `Your wallet balance is ${formatCurrency(walletBalance)}. Add ${formatCurrency(
+          entryFeeAmount - walletBalance,
+        )} or more to continue.`,
+      );
+      return;
+    }
+
     const registrationData = {
       tournamentId,
       playerEmail: playerDetails.email,
@@ -172,10 +234,9 @@ export default function TournamentRegistration() {
       teamName: tournamentDetails.teamName,
       contactNumber: tournamentDetails.contactNumber
     };
-    console.log("Starting tournament registration with data:", registrationData);
 
     try {
-      const response = await fetch("/api/registration", {
+      const response = await apiFetch("/registration", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -184,16 +245,20 @@ export default function TournamentRegistration() {
       });
 
       const data = await response.json();
-      console.log("Registration API response:", { status: response.status, data });
 
       if (response.ok) {
-        console.log("Registration successful");
         alert(`You've been successfully registered for ${tournament.name}!`);
         setTimeout(() => {
           router.push("/dashboard/my-tournaments");
         }, 2000);
       } else {
         console.error("Registration failed:", data.error);
+        if (data.error?.toLowerCase().includes("insufficient")) {
+          setCurrentStep(2);
+          setWalletError(
+            `Your wallet could not cover the ${tournament?.entryFee || "entry fee"}. Add funds and try again.`,
+          );
+        }
         alert(data.error || "Failed to register for tournament");
       }
     } catch (error) {
@@ -209,6 +274,28 @@ export default function TournamentRegistration() {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-lg">Loading...</p>
+      </div>
+    );
+  }
+
+  if (sessionErrorMessage && !user) {
+    return (
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 text-white">
+          <CardContent className="p-8 text-center space-y-4">
+            <AlertCircle className="h-16 w-16 mx-auto text-yellow-500" />
+            <h2 className="text-2xl font-bold">Registration Unavailable</h2>
+            <p className="text-gray-400">{sessionErrorMessage}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => router.replace(loginCallback)}>
+                Sign In
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/tournaments")}>
+                Back to Tournaments
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -252,24 +339,24 @@ export default function TournamentRegistration() {
 
           <div className="flex items-center gap-2">
             <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              currentStep >= 3 ? "bg-purple-600 text-white" : "bg-slate-700 text-gray-400"
+              currentStep >= 2 ? "bg-purple-600 text-white" : "bg-slate-700 text-gray-400"
             }`}>
               2
             </div>
-            <span className={`text-sm ${currentStep >= 3 ? "text-white" : "text-gray-400"}`}>Payment</span>
+            <span className={`text-sm ${currentStep >= 2 ? "text-white" : "text-gray-400"}`}>Wallet Review</span>
           </div>
 
           <div className="flex items-center gap-2">
             <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              currentStep >= 5 ? "bg-purple-600 text-white" : "bg-slate-700 text-gray-400"
+              currentStep >= 3 ? "bg-purple-600 text-white" : "bg-slate-700 text-gray-400"
             }`}>
               3
             </div>
-            <span className={`text-sm ${currentStep >= 5 ? "text-white" : "text-gray-400"}`}>Tournament Details</span>
+            <span className={`text-sm ${currentStep >= 3 ? "text-white" : "text-gray-400"}`}>Tournament Details</span>
           </div>
         </div>
 
-        <Progress value={(currentStep / 5) * 100} className="h-2 bg-slate-700" />
+        <Progress value={(currentStep / 3) * 100} className="h-2 bg-slate-700" />
       </div>
 
       {/* Tournament Details Card */}
@@ -326,6 +413,25 @@ export default function TournamentRegistration() {
             <CardTitle>Player Details</CardTitle>
           </CardHeader>
           <CardContent>
+            {profileRequiredMessage && (
+              <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                <div className="mb-3 flex items-start gap-2">
+                  <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <p>{profileRequiredMessage}</p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/my-account?callback=${encodeURIComponent(registrationPath)}`,
+                    )
+                  }
+                  className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+                >
+                  Create Profile
+                </Button>
+              </div>
+            )}
             <form onSubmit={handlePlayerDetailsSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -391,12 +497,17 @@ export default function TournamentRegistration() {
                   onChange={handlePlayerDetailsChange}
                   placeholder="Enter your email"
                   required
+                  readOnly={Boolean(user?.email)}
 
                   className="bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500"
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+              <Button
+                type="submit"
+                disabled={Boolean(profileRequiredMessage)}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
                 Continue
               </Button>
             </form>
@@ -404,53 +515,76 @@ export default function TournamentRegistration() {
         </Card>
       )}
 
-      {/* Payment Step */}
-      {currentStep === 3 && (
+      {/* Wallet Review Step */}
+      {currentStep === 2 && (
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 text-white">
           <CardHeader>
-            <CardTitle>Payment</CardTitle>
+            <CardTitle>Wallet Review</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50">
+            <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50 space-y-3">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-400">Entry Fee</span>
-                <span className="text-xl font-bold text-green-400">{tournament?.entryFee}</span>
+                <span className="text-xl font-bold text-green-400">{tournament?.entryFee || "Free"}</span>
               </div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-400">Processing Fee</span>
-                <span className="text-sm">Free</span>
+                <span className="text-gray-400">Wallet Balance</span>
+                <span className={`text-xl font-bold ${isWalletSufficient ? "text-green-400" : "text-red-400"}`}>
+                  {formatCurrency(walletBalance)}
+                </span>
               </div>
-              <div className="border-t border-slate-600 pt-2 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total</span>
-                  <span className="text-xl font-bold text-green-400">{tournament?.entryFee}</span>
+              {entryFeeAmount > 0 && (
+                <div className="border-t border-slate-600 pt-2 mt-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Remaining After Registration</span>
+                    <span className={`text-xl font-bold ${isWalletSufficient ? "text-green-400" : "text-red-400"}`}>
+                      {formatCurrency(walletBalance - entryFeeAmount)}
+                    </span>
+                  </div>
                 </div>
+              )}
+              <div className="rounded-lg border border-slate-600/50 bg-slate-900/40 p-3 text-sm text-gray-300">
+                {entryFeeAmount === 0
+                  ? "This tournament is free. No wallet deduction will be applied."
+                  : isWalletSufficient
+                    ? "Your wallet can cover the entry fee. Continue to complete the registration."
+                    : "Your wallet balance is not enough for this tournament. Add funds before continuing."}
               </div>
             </div>
 
-            <Button 
-              onClick={handlePayment} 
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            >
-              {isLoading ? (
-                <>
-                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-solid border-white border-r-transparent"></div>
-                  Processing...
-                </>
+            {walletError && (
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {walletError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              {entryFeeAmount > 0 && !isWalletSufficient ? (
+                  <Button
+                  type="button"
+                  onClick={() => router.push(`/dashboard/wallet?callback=${encodeURIComponent(registrationPath)}`)}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Add Funds
+                </Button>
               ) : (
-                <>
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Proceed to Payment
-                </>
+                <Button
+                  type="button"
+                  onClick={handleWalletReview}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Continue to Tournament Details
+                </Button>
               )}
-            </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Tournament Details Form */}
-      {currentStep === 5 && (
+      {currentStep === 3 && (
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 text-white">
           <CardHeader>
             <CardTitle>Tournament Details</CardTitle>
@@ -501,20 +635,6 @@ export default function TournamentRegistration() {
         </Card>
       )}
 
-      {/* Payment Success Dialog */}
-      <Dialog open={isPaymentDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              Payment Successful
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Your payment has been processed successfully. Please provide your tournament details to complete the registration.
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

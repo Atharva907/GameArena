@@ -120,3 +120,110 @@
     @apply bg-background text-foreground;
   }
 }
+
+.dashboard-shell {
+  font-size: 14px;
+}
+
+.dashboard-shell h1 {
+  font-size: 1.5rem !important;
+  line-height: 1.9rem !important;
+}
+
+.dashboard-shell h2 {
+  font-size: 1.125rem !important;
+  line-height: 1.5rem !important;
+}
+
+.dashboard-shell h3 {
+  font-size: 1rem !important;
+  line-height: 1.35rem !important;
+}
+
+.dashboard-shell h4 {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.dashboard-shell p {
+  line-height: 1.35rem;
+}
+
+.dashboard-shell .text-3xl {
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+}
+
+.dashboard-shell .text-2xl {
+  font-size: 1.125rem !important;
+  line-height: 1.5rem !important;
+}
+
+.dashboard-shell .text-xl {
+  font-size: 1rem !important;
+  line-height: 1.35rem !important;
+}
+
+.dashboard-shell .text-lg {
+  font-size: 0.95rem !important;
+  line-height: 1.3rem !important;
+}
+
+.dashboard-shell .p-6 {
+  padding: 1rem !important;
+}
+
+.dashboard-shell .p-8 {
+  padding: 1.25rem !important;
+}
+
+.dashboard-shell .px-6 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.dashboard-shell .py-6 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.dashboard-shell .gap-6 {
+  gap: 1rem !important;
+}
+
+.dashboard-shell .gap-8 {
+  gap: 1.25rem !important;
+}
+
+.dashboard-shell .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem !important;
+}
+
+.dashboard-shell .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem !important;
+}
+
+.dashboard-shell [data-slot="card"] {
+  gap: 0.75rem;
+  border-radius: 0.875rem;
+}
+
+.dashboard-shell [data-slot="card-header"] {
+  padding: 0.875rem 1rem 0.25rem;
+  gap: 0.25rem;
+}
+
+.dashboard-shell [data-slot="card-content"] {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.dashboard-shell [data-slot="card-footer"] {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+}
+
+.dashboard-shell [data-slot="button"] {
+  min-height: 2rem;
+}

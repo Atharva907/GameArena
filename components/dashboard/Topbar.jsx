@@ -1,96 +1,136 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
+import { showToast } from "@/lib/showToast";
+import { logout } from "@/store/reducer/authReducer";
 import { Menu, User, LogOut } from "lucide-react";
+import { apiFetch } from "@/lib/apiClient";
+
+const routeLabels = [
+  ["/dashboard", "Overview"],
+  ["/dashboard/tournaments", "Tournaments"],
+  ["/dashboard/my-tournaments", "My Tournaments"],
+  ["/dashboard/wallet", "Wallet"],
+  ["/dashboard/orders", "Orders"],
+  ["/dashboard/my-account", "My Account"],
+];
+
+function getSectionLabel(pathname) {
+  return (
+    routeLabels.find(([href]) => pathname === href || pathname.startsWith(`${href}/`))?.[1] ||
+    "Dashboard"
+  );
+}
 
 export default function Topbar({ onOpenSidebar = () => {} }) {
   const [playerName, setPlayerName] = useState("Player");
   const router = useRouter();
-  
+  const dispatch = useDispatch();
+  const pathname = usePathname();
+  const sectionLabel = getSectionLabel(pathname || "/dashboard");
+
   useEffect(() => {
-    // Fetch user data
     const fetchUserData = async () => {
       try {
-        const response = await fetch("/api/user/me");
-        if (response.ok) {
-          const responseData = await response.json();
-          // The actual user data is in the data field
-          const userData = responseData.data || responseData;
-          
-          // Try to get player name from player profile
-          if (userData.email) {
-            const playerResponse = await fetch(`/api/player?email=${encodeURIComponent(userData.email)}`);
-            if (playerResponse.ok) {
-              const playerData = await playerResponse.json();
-              if (playerData.fullName) {
-                // Extract first name from full name
-                const firstName = playerData.fullName.split(" ")[0];
-                setPlayerName(firstName);
-                return;
-              }
+        const response = await apiFetch("/user/me");
+        if (!response.ok) return;
+
+        const responseData = await response.json();
+        const userData = responseData.data || responseData;
+
+        if (userData.email) {
+          const playerResponse = await apiFetch(
+            `/player?email=${encodeURIComponent(userData.email)}`,
+          );
+
+          if (playerResponse.ok) {
+            const playerData = await playerResponse.json();
+            if (playerData.fullName) {
+              setPlayerName(playerData.fullName.split(" ")[0]);
+              return;
             }
           }
-          
-          // Fallback to user name if player profile not found
-          if (userData.name) {
-            // Extract first name from full name
-            const firstName = userData.name.split(" ")[0];
-            setPlayerName(firstName);
-          }
         }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+
+        if (userData.name) {
+          setPlayerName(userData.name.split(" ")[0]);
+        }
+      } catch {
+        // Ignore session fetch errors here. The layout guard handles access control.
       }
     };
-    
+
     fetchUserData();
   }, []);
-  
-  // Handle logout
-  const handleLogout = () => {
-    // Clear player data from localStorage
-    localStorage.removeItem("playerEmail");
-    // Redirect to login page
-    router.push("/auth/login");
+
+  const handleLogout = async () => {
+    try {
+      const response = await apiFetch("/auth/logout", { method: "POST" });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Logout failed");
+      }
+
+      dispatch(logout());
+      localStorage.removeItem("playerEmail");
+      showToast("success", data.message);
+      router.replace("/auth/login");
+    } catch (error) {
+      showToast("error", error.message || "Logout failed");
+    }
   };
-  
+
   return (
-    <header className="fixed top-0 left-0 w-full bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 p-4 flex justify-between items-center z-30 md:static shadow-lg relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600"></div>
-      <div className="flex items-center gap-3">
-        {/* Mobile menu button (visible on small screens) */}
-        <Button
-          onClick={onOpenSidebar}
-          type="button"
-          size="icon"
-          className="md:hidden bg-slate-800 hover:bg-slate-700 border border-slate-600"
-          aria-label="Open sidebar"
-        >
-          <Menu className="h-5 w-5 text-white" />
-        </Button>
-        <div>
-          <h2 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Welcome back, {playerName}!</h2>
-          <p className="text-xs text-gray-400">Ready for your next challenge?</p>
+    <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button
+            onClick={onOpenSidebar}
+            type="button"
+            size="icon"
+            className="border border-slate-800 bg-slate-900 text-slate-100 hover:bg-slate-800 md:hidden"
+            aria-label="Open sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-400">
+              {sectionLabel}
+            </p>
+            <h2 className="truncate text-base font-semibold text-white">
+              Welcome back, {playerName}
+            </h2>
+            <p className="text-xs text-slate-400">
+              Manage your competitive profile and activity.
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="flex gap-3">
-        <Button 
-          variant="outline" 
-          onClick={() => router.push("/dashboard/my-account")}
-          className="border-purple-500/50 text-purple-300 hover:bg-purple-600/20 hover:border-purple-500 transition-all duration-300 flex items-center gap-2"
-        >
-          <User className="h-4 w-4" />
-          Profile
-        </Button>
-        <Button 
-          className="bg-gradient-to-r from-red-600 to-pink-600 text-white hover:from-red-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2" 
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/dashboard/my-account")}
+            className="border-slate-700 bg-slate-900/70 text-slate-200 hover:bg-slate-800"
+          >
+            <User className="h-4 w-4" />
+            Profile
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-rose-500/30 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:text-white"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
       </div>
     </header>
   );

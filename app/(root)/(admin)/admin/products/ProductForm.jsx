@@ -1,16 +1,30 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ImagePlus, Loader2, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AdminPanel,
+  adminFieldClass,
+  adminGhostButtonClass,
+  adminPrimaryButtonClass,
+  adminSelectClass,
+  adminTextareaClass,
+} from "@/components/Application/Admin/AdminUi";
+import { showToast } from "@/lib/showToast";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function ProductForm({ product = {} }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: product.name || '',
-    description: product.description || '',
-    price: product.price || '',
-    category: product.category || '',
-    image: product.image || '',
+    name: product.name || "",
+    description: product.description || "",
+    price: product.price || "",
+    category: product.category?._id || product.category || "",
+    image: product.image || "",
     inStock: product.inStock || 0,
     isFeatured: product.isFeatured || false,
   });
@@ -19,22 +33,23 @@ export default function ProductForm({ product = {} }) {
   const [showImageSelector, setShowImageSelector] = useState(false);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [libraryImages, setLibraryImages] = useState([]);
+  const [imageLoading, setImageLoading] = useState(false);
 
-  // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories');
+        const response = await apiFetch("/categories");
         const data = await response.json();
 
-        if (data.success) {
-          setCategories(data.categories);
-        } else {
-          setError('Failed to load categories');
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Failed to load categories");
         }
-      } catch (err) {
-        setError('Error loading categories');
-        console.error(err);
+
+        setCategories(data.categories || []);
+      } catch (fetchError) {
+        console.error("Error loading categories:", fetchError);
+        setError(fetchError.message || "Error loading categories");
       } finally {
         setCategoriesLoading(false);
       }
@@ -42,170 +57,141 @@ export default function ProductForm({ product = {} }) {
 
     fetchCategories();
   }, []);
-  const [cloudinaryImages, setCloudinaryImages] = useState([]);
-  const [imageLoading, setImageLoading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const url = product._id 
-        ? `/api/products/${product._id}`
-        : '/api/products';
+      const url = product._id ? `/products/${product._id}` : "/products";
+      const method = product._id ? "PUT" : "POST";
 
-      const method = product._id ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          price: Number(formData.price),
+          inStock: Number(formData.inStock),
+        }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save product');
+        throw new Error(data.error || data.message || "Failed to save product");
       }
 
-      router.push('/admin/products');
-    } catch (err) {
-      console.error('Error saving product:', err);
-      setError(err.message);
+      showToast("success", product._id ? "Product updated" : "Product created");
+      router.push("/admin/products");
+    } catch (submitError) {
+      console.error("Error saving product:", submitError);
+      setError(submitError.message);
+      showToast("error", submitError.message || "Failed to save product");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCloudinaryImages = async () => {
+  const fetchLibraryImages = async () => {
     setImageLoading(true);
+
     try {
-      const response = await fetch('/api/cloudinary-images');
+      const response = await apiFetch("/media/library");
+
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Error response from API:', errorData);
-        const errorMessage = errorData.details || errorData.error || 'Failed to fetch images';
-        throw new Error(errorMessage);
+        throw new Error(
+          errorData.details || errorData.error || "Failed to fetch images",
+        );
       }
+
       const data = await response.json();
-      setCloudinaryImages(data.resources || []);
+      setLibraryImages(data.resources || []);
       setShowImageSelector(true);
-    } catch (err) {
-      console.error('Error fetching images:', err);
-      setError(`Failed to load images from Cloudinary: ${err.message}`);
+    } catch (fetchError) {
+      console.error("Error fetching images:", fetchError);
+      setError(`Failed to load images: ${fetchError.message}`);
+      showToast("error", fetchError.message || "Failed to load images");
     } finally {
       setImageLoading(false);
     }
   };
 
   const selectImage = (imageUrl) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      image: imageUrl
+      image: imageUrl,
     }));
     setShowImageSelector(false);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full">
+    <div className="flex w-full flex-col gap-6">
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-4 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293 1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
-            </div>
-          </div>
+        <div className="rounded-[24px] border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+          {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Product Name
-          </label>
-          <div className="mt-1">
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Enter product name"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Description
-          </label>
-          <div className="mt-1">
-            <textarea
-              id="description"
-              name="description"
-              required
-              rows={4}
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Describe your product"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Price (₹)
-            </label>
-            <div className="mt-1">
-              <input
-                type="number"
-                id="price"
-                name="price"
+        <AdminPanel
+          title="Product profile"
+          description="Start with the product name, a short description, and the category mapping."
+        >
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="name">Product Name</Label>
+              <Input
+                id="name"
+                name="name"
                 required
-                min="0"
-                step="0.01"
-                value={formData.price}
+                value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-                placeholder="0.00"
+                className={adminFieldClass}
+                placeholder="Enter product name"
               />
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Category
-            </label>
-            <div className="mt-1">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="description">Description</Label>
+              <textarea
+                id="description"
+                name="description"
+                required
+                rows={5}
+                value={formData.description}
+                onChange={handleChange}
+                className={`w-full ${adminTextareaClass}`}
+                placeholder="Describe the product, key value, and positioning."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
               <select
                 id="category"
                 name="category"
                 required
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                className={`w-full ${adminSelectClass}`}
                 disabled={categoriesLoading}
               >
-                <option value="">Select a category</option>
+                <option value="">
+                  {categoriesLoading ? "Loading categories..." : "Select a category"}
+                </option>
                 {categories.map((category) => (
                   <option key={category._id} value={category._id}>
                     {category.name}
@@ -213,168 +199,199 @@ export default function ProductForm({ product = {} }) {
                 ))}
               </select>
             </div>
-          </div>
-        </div>
 
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Product Image
-          </label>
-          <div className="mt-1">
-            <button
-              type="button"
-              onClick={fetchCloudinaryImages}
-              disabled={imageLoading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200 flex items-center disabled:opacity-50"
-            >
-              {imageLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Loading Images...
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Select Image
-                </>
-              )}
-            </button>
-          </div>
-          
-          {/* Image Preview */}
-          {formData.image && (
-            <div className="mt-4">
-              <div className="relative rounded-lg overflow-hidden shadow-md">
-                <img
-                  src={formData.image}
-                  alt="Product preview"
-                  className="w-full h-48 object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, image: "" }))}
-                  className="absolute top-3 right-3 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors duration-200"
-                  aria-label="Remove image"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Image Selector Modal */}
-        {showImageSelector && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-y-auto w-full mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Select an Image</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowImageSelector(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              {cloudinaryImages.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {cloudinaryImages.map((image) => (
-                    <div
-                      key={image.public_id}
-                      className="relative group cursor-pointer rounded-lg overflow-hidden"
-                      onClick={() => selectImage(image.secure_url)}
-                    >
-                      <img
-                        src={image.secure_url}
-                        alt={image.public_id}
-                        className="w-full h-32 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-200 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center py-8 text-gray-500 dark:text-gray-400">No images found in your Cloudinary account</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="inStock" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Stock Quantity
-            </label>
-            <div className="mt-1">
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="price">Price (INR)</Label>
+              <Input
+                id="price"
+                name="price"
                 type="number"
+                required
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={handleChange}
+                className={adminFieldClass}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </AdminPanel>
+
+        <AdminPanel
+          title="Inventory and visibility"
+          description="Keep stock data and featured visibility aligned with the storefront."
+        >
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="inStock">Stock Quantity</Label>
+              <Input
                 id="inStock"
                 name="inStock"
+                type="number"
                 required
                 min="0"
                 value={formData.inStock}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                className={adminFieldClass}
                 placeholder="0"
               />
             </div>
-          </div>
 
-          <div className="flex items-center mt-8">
-            <input
-              type="checkbox"
-              id="isFeatured"
-              name="isFeatured"
-              checked={formData.isFeatured}
-              onChange={handleChange}
-              className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
-            />
-            <label htmlFor="isFeatured" className="ml-3 block text-sm text-gray-700 dark:text-gray-300">
-              Featured Product
-            </label>
+            <div className="rounded-[24px] border border-border/60 bg-muted/20 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-emerald-500/10 p-2 text-emerald-500">
+                  <Sparkles className="size-4" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="isFeatured" className="text-sm font-medium">
+                    Featured product
+                  </Label>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Highlight this product in premium storefront placements.
+                  </p>
+                  <label className="flex items-center gap-3 pt-1 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      id="isFeatured"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={handleChange}
+                      className="size-4 rounded border-border/60"
+                    />
+                    Mark as featured
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </AdminPanel>
 
-        <div className="flex justify-end pt-4">
-          <button
+        <AdminPanel
+          title="Media"
+          description="Attach the product image from ImageKit or paste a direct image URL."
+        >
+          <div className="space-y-5">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                id="image"
+                name="image"
+                value={formData.image}
+                onChange={handleChange}
+                className={adminFieldClass}
+                placeholder="Paste image URL"
+              />
+              <Button
+                type="button"
+                onClick={fetchLibraryImages}
+                disabled={imageLoading}
+                className={`${adminPrimaryButtonClass} h-11 gap-2 px-5`}
+              >
+                {imageLoading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="size-4" />
+                    Open Library
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {formData.image && (
+              <div className="overflow-hidden rounded-[24px] border border-border/60 bg-muted/20">
+                <div className="relative aspect-[16/9] w-full max-w-2xl">
+                  <img
+                    src={formData.image}
+                    alt="Product preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, image: "" }))}
+                    className="absolute right-3 top-3 rounded-full border border-white/15 bg-slate-950/70 px-3 py-1 text-sm text-white backdrop-blur transition hover:bg-slate-950/90"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </AdminPanel>
+
+        <div className="flex flex-col gap-3 border-t border-border/60 pt-6 sm:flex-row sm:justify-end">
+          <Button
             type="button"
-            onClick={() => router.push('/admin/products')}
-            className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3 transition-colors duration-200"
+            variant="outline"
+            className={adminGhostButtonClass}
+            onClick={() => router.push("/admin/products")}
           >
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors duration-200"
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </span>
-            ) : (product._id ? 'Update Product' : 'Create Product')}
-          </button>
+          </Button>
+          <Button type="submit" disabled={loading} className={adminPrimaryButtonClass}>
+            {loading ? "Saving..." : product._id ? "Update Product" : "Create Product"}
+          </Button>
         </div>
       </form>
+
+      {showImageSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-5xl overflow-hidden rounded-[28px] border border-border/60 bg-background shadow-[0_28px_100px_-50px_rgba(15,23,42,0.9)]">
+            <div className="flex items-center justify-between border-b border-border/60 px-5 py-4 sm:px-6">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Select product artwork</h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose an existing asset instead of pasting the URL manually.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className={adminGhostButtonClass}
+                onClick={() => setShowImageSelector(false)}
+              >
+                Close
+              </Button>
+            </div>
+
+            {libraryImages.length > 0 ? (
+              <div className="grid max-h-[70vh] grid-cols-2 gap-4 overflow-y-auto p-5 sm:grid-cols-3 lg:grid-cols-4 sm:p-6">
+                {libraryImages.map((image) => (
+                  <button
+                    key={image.fileId}
+                    type="button"
+                    className="group overflow-hidden rounded-[22px] border border-border/60 bg-muted/20 text-left transition hover:-translate-y-0.5 hover:border-foreground/15 hover:bg-muted/35"
+                    onClick={() => selectImage(image.url || image.thumbnailUrl)}
+                  >
+                    <div className="aspect-[4/3] overflow-hidden">
+                      <img
+                        src={image.url || image.thumbnailUrl}
+                        alt={image.filePath || image.fileId}
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                      />
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="line-clamp-1 text-sm font-medium text-foreground">
+                        {image.filePath || image.fileId}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Click to use this image
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="px-6 py-12 text-center text-sm text-muted-foreground">
+                No images found in the ImageKit library.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

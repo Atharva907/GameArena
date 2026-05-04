@@ -4,14 +4,15 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, Clock, Trophy, ArrowLeft, UserCheck, UserPlus } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Trophy, ArrowLeft } from "lucide-react";
 import { getStatusColor } from "@/lib/esportUtils";
+import TournamentBracket from "@/components/tournaments/TournamentBracket";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function TournamentPage() {
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isRegistered, setIsRegistered] = useState(false);
   const params = useParams();
   const router = useRouter();
   const tournamentId = params.id;
@@ -19,10 +20,7 @@ export default function TournamentPage() {
   useEffect(() => {
     const fetchTournamentDetails = async () => {
       try {
-        const [tournamentResponse, registrationResponse] = await Promise.all([
-          fetch(`/api/tournaments/${tournamentId}`),
-          fetch(`/api/tournament/${tournamentId}/registration`)
-        ]);
+        const tournamentResponse = await apiFetch(`/tournaments/${tournamentId}`);
 
         if (!tournamentResponse.ok) {
           throw new Error("Failed to fetch tournament details");
@@ -31,13 +29,6 @@ export default function TournamentPage() {
         const tournamentData = await tournamentResponse.json();
         setTournament(tournamentData.data || tournamentData);
 
-        if (registrationResponse.ok) {
-          const registrationData = await registrationResponse.json();
-          setTournament(prev => ({
-            ...prev,
-            registrationDetails: registrationData
-          }));
-        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -70,36 +61,17 @@ export default function TournamentPage() {
     );
   }
 
-  const handleRegister = async () => {
-    try {
-      const response = await fetch(`/api/tournament/${tournamentId}/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to register for tournament");
-      }
-
-      setIsRegistered(true);
-    } catch (error) {
-      console.error("Registration error:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
       <div className="container mx-auto px-4 py-8">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/dashboard/my-tournaments")}
-          className="mb-6 bg-slate-800/50 backdrop-blur-sm border-slate-700 text-white hover:bg-slate-700/50 transition-all duration-200 shadow-lg"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to My Tournaments
-        </Button>
+      <Button
+        variant="outline"
+        onClick={() => router.push("/tournaments")}
+        className="mb-6 bg-slate-800/50 backdrop-blur-sm border-slate-700 text-white hover:bg-slate-700/50 transition-all duration-200 shadow-lg"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Tournaments
+      </Button>
 
         <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 text-white overflow-hidden shadow-2xl">
           {/* Tournament Header with Image */}
@@ -313,6 +285,10 @@ export default function TournamentPage() {
               </div>
             </div>
           )}
+
+          <div className="rounded-xl bg-white p-5 text-slate-950">
+            <TournamentBracket tournamentId={tournamentId} />
+          </div>
         </CardContent>
       </Card>
       </div>

@@ -1,7 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Package, PencilLine, Sparkles, Trash2, Warehouse } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AdminEmptyState,
+  AdminMetric,
+  AdminPanel,
+  AdminStatusBadge,
+  adminGhostButtonClass,
+  adminTableWrapClass,
+} from "@/components/Application/Admin/AdminUi";
+import { showToast } from "@/lib/showToast";
+import { apiFetch } from "@/lib/apiClient";
 
 export default function ProductsList() {
   const [products, setProducts] = useState([]);
@@ -14,14 +34,16 @@ export default function ProductsList() {
 
   async function fetchProducts() {
     try {
-      const response = await fetch('/api/products');
+      setLoading(true);
+      const response = await apiFetch("/products");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setProducts(data.products || []);
+      setError(null);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.error("Error fetching products:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -29,177 +51,205 @@ export default function ProductsList() {
   }
 
   async function handleDeleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
-      try {
-        const response = await fetch(`/api/products/${id}`, {
-          method: 'DELETE',
-        });
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    try {
+      const response = await apiFetch(`/products/${id}`, {
+        method: "DELETE",
+      });
 
-        // Refresh products list
-        fetchProducts();
-        alert('Product deleted successfully');
-      } catch (err) {
-        console.error('Error deleting product:', err);
-        alert('Failed to delete product');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      showToast("success", "Product deleted successfully");
+      fetchProducts();
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      showToast("error", "Failed to delete product");
     }
   }
 
-  if (loading) return <div>Loading products...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const metrics = useMemo(() => {
+    const featuredProducts = products.filter((product) => product.isFeatured).length;
+    const totalStock = products.reduce((sum, product) => sum + (product.inStock || 0), 0);
+    const lowStock = products.filter((product) => (product.inStock || 0) <= 5).length;
+
+    return { featuredProducts, totalStock, lowStock };
+  }, [products]);
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold">All Products</h2>
-        <Link 
-          href="/admin/products/new"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-full sm:w-auto text-center"
-        >
-          Add New Product
-        </Link>
-      </div>
+    <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-3">
+        <AdminMetric
+          label="Products"
+          value={products.length}
+          detail="Catalog items currently available"
+          icon={Package}
+          accent="from-sky-500/20 via-sky-500/5 to-transparent"
+        />
+        <AdminMetric
+          label="Featured"
+          value={metrics.featuredProducts}
+          detail="Products highlighted in premium surfaces"
+          icon={Sparkles}
+          accent="from-fuchsia-500/20 via-fuchsia-500/5 to-transparent"
+        />
+        <AdminMetric
+          label="Total stock"
+          value={metrics.totalStock}
+          detail={`${metrics.lowStock} products at low stock threshold`}
+          icon={Warehouse}
+          accent="from-emerald-500/20 via-emerald-500/5 to-transparent"
+        />
+      </section>
 
-      {products.length === 0 ? (
-        <div className="bg-yellow-50 p-4 rounded-md text-yellow-800">
-          No products found. Add your first product to get started.
-        </div>
-      ) : (
-        <>
-          {/* Desktop view - Table */}
-          <div className="hidden lg:block w-full overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Featured
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
-                  <tr key={product._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <img className="h-10 w-10 rounded-full object-cover" src={product.image} alt="" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">{product.description}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{product.category?.name || product.category || "N/A"}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{product.inStock}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        product.isFeatured ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {product.isFeatured ? 'Yes' : 'No'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/admin/products/${product._id}/edit`} className="text-indigo-600 hover:text-indigo-900 mr-3">
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteProduct(product._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <AdminPanel
+        title="Product inventory"
+        description="Review pricing, category mapping, stock levels, and featured visibility from one standard table."
+      >
+        {loading ? (
+          <div className="py-12 text-sm text-muted-foreground">Loading products...</div>
+        ) : error ? (
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+            Error: {error}
           </div>
+        ) : products.length === 0 ? (
+          <AdminEmptyState
+            title="No products yet"
+            description="Add the first product to start building a clean catalog for the storefront."
+            action={
+              <Button asChild className="rounded-full bg-emerald-600 text-white hover:bg-emerald-500">
+                <Link href="/admin/products/new">Create Product</Link>
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            <div className={`hidden lg:block ${adminTableWrapClass}`}>
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Product</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Visibility</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((product) => (
+                    <TableRow key={product._id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <img
+                            className="size-12 rounded-2xl object-cover ring-1 ring-border/60"
+                            src={product.image}
+                            alt={product.name}
+                          />
+                          <div className="min-w-0">
+                            <p className="font-medium">{product.name}</p>
+                            <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                              {product.description}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{product.category?.name || product.category || "N/A"}</TableCell>
+                      <TableCell>${product.price.toFixed(2)}</TableCell>
+                      <TableCell>{product.inStock}</TableCell>
+                      <TableCell>
+                        <AdminStatusBadge status={product.isFeatured ? "featured" : "regular"}>
+                          {product.isFeatured ? "Featured" : "Standard"}
+                        </AdminStatusBadge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button asChild variant="outline" size="sm" className={adminGhostButtonClass}>
+                            <Link href={`/admin/products/${product._id}/edit`}>
+                              <PencilLine className="size-4" />
+                              <span className="hidden sm:inline">Edit</span>
+                            </Link>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-rose-500/20 bg-rose-500/5 text-rose-700 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-300 dark:hover:text-rose-200"
+                            onClick={() => handleDeleteProduct(product._id)}
+                          >
+                            <Trash2 className="size-4" />
+                            <span className="hidden sm:inline">Delete</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
-          {/* Mobile view - Cards */}
-          <div className="lg:hidden space-y-4">
-            {products.map((product) => (
-              <div key={product._id} className="bg-white rounded-lg shadow p-4 border border-gray-200">
-                <div className="flex items-start space-x-4">
-                  <img 
-                    className="h-16 w-16 rounded-lg object-cover flex-shrink-0" 
-                    src={product.image} 
-                    alt={product.name} 
-                  />
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <h3 className="text-lg font-medium text-gray-900 break-words">{product.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2 break-words">{product.description}</p>
-
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                      <div>
-                        <span className="font-medium text-gray-700">Category:</span>
-                        <span className="ml-1 text-gray-900">{product.category?.name || product.category || "N/A"}</span>
+            <div className="grid gap-4 lg:hidden">
+              {products.map((product) => (
+                <div
+                  key={`${product._id}-mobile`}
+                  className="rounded-[24px] border border-border/60 bg-muted/20 p-4"
+                >
+                  <div className="flex items-start gap-4">
+                    <img
+                      className="size-16 rounded-[20px] object-cover ring-1 ring-border/60"
+                      src={product.image}
+                      alt={product.name}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-medium">{product.name}</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {product.category?.name || product.category || "N/A"}
+                          </p>
+                        </div>
+                        <AdminStatusBadge status={product.isFeatured ? "featured" : "regular"}>
+                          {product.isFeatured ? "Featured" : "Standard"}
+                        </AdminStatusBadge>
                       </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Price:</span>
-                        <span className="ml-1 text-gray-900">${product.price.toFixed(2)}</span>
+                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                        {product.description}
+                      </p>
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Price</p>
+                          <p className="font-medium">${product.price.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Stock</p>
+                          <p className="font-medium">{product.inStock}</p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Stock:</span>
-                        <span className="ml-1 text-gray-900">{product.inStock}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Featured:</span>
-                        <span className={`ml-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          product.isFeatured ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {product.isFeatured ? 'Yes' : 'No'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex space-x-2">
-                      <Link 
-                        href={`/admin/products/${product._id}/edit`} 
-                        className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-4 rounded-md text-center font-medium transition-colors"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteProduct(product._id)}
-                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-2 px-4 rounded-md font-medium transition-colors"
-                      >
-                        Delete
-                      </button>
                     </div>
                   </div>
+                  <div className="mt-4 flex gap-2">
+                    <Button asChild variant="outline" className="flex-1 rounded-full">
+                      <Link href={`/admin/products/${product._id}/edit`}>Edit</Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 rounded-full border-rose-500/20 bg-rose-500/5 text-rose-700 dark:text-rose-300"
+                      onClick={() => handleDeleteProduct(product._id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+              ))}
+            </div>
+          </>
+        )}
+      </AdminPanel>
     </div>
   );
 }

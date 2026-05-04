@@ -1,5 +1,4 @@
-// Player data service
-import { useSelector } from 'react-redux';
+import { apiFetch } from "@/lib/apiClient";
 
 // Function to get player data from API
 export const getPlayerData = async () => {
@@ -43,10 +42,9 @@ export const getPlayerData = async () => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('/api/user/me', {
-      method: 'GET',
+    const response = await apiFetch("/user/me", {
+      method: "GET",
       headers,
-      credentials: 'include', // Include cookies for authentication
     });
 
     console.log('Response status:', response.status);

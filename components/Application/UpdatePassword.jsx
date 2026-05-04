@@ -20,6 +20,7 @@ import axios from "axios";
 import { showToast } from "@/lib/showToast";
 import { useRouter } from "next/navigation";
 import { WEBSITE_LOGIN } from "@/routes/WebsiteRoute";
+import { apiUrl, axiosWithCredentials } from "@/lib/apiClient";
 
 const UpdatePassword = ({ email, resetToken }) => {
   const router = useRouter();
@@ -42,17 +43,21 @@ const UpdatePassword = ({ email, resetToken }) => {
   const handlePasswordUpdate = async (values) => {
     try {
       setLoading(true);
-      const { data } = await axios.post("/api/auth/reset-password/update-password", {
-        email,
-        password: values.password,
-        token: resetToken,
-      });
+      const { data } = await axios.post(
+        apiUrl("/auth/reset-password/update-password"),
+        {
+          email,
+          password: values.password,
+          token: resetToken,
+        },
+        axiosWithCredentials,
+      );
 
       if (!data.success) throw new Error(data.message);
 
       showToast("success", data.message);
       form.reset();
-      router.push(WEBSITE_LOGIN);
+      router.replace(WEBSITE_LOGIN);
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.response?.data?.message || error.message

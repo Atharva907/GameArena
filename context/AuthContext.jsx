@@ -12,7 +12,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const auth = useSelector(state => state.auth);
+  const auth = useSelector((state) => state.authStore.auth);
 
   return (
     <AuthContext.Provider value={{ auth }}>

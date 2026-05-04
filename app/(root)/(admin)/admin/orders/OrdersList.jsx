@@ -1,7 +1,53 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  CircleDollarSign,
+  Clock3,
+  Eye,
+  PackageCheck,
+  RefreshCw,
+  ShoppingBag,
+  Trash2,
+  Truck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AdminEmptyState,
+  AdminMetric,
+  AdminPanel,
+  AdminStatusBadge,
+  adminGhostButtonClass,
+  adminSelectClass,
+  adminTableWrapClass,
+} from "@/components/Application/Admin/AdminUi";
+import { showToast } from "@/lib/showToast";
+import { apiFetch } from "@/lib/apiClient";
+
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+const getCustomerName = (player) =>
+  player?.fullName || player?.name || player?.email || "Guest";
+
+const getCustomerEmail = (player) => player?.email || "No email available";
 
 export default function OrdersList() {
   const [orders, setOrders] = useState([]);
@@ -14,14 +60,18 @@ export default function OrdersList() {
 
   async function fetchOrders() {
     try {
-      const response = await fetch('/api/admin/orders');
+      setLoading(true);
+      const response = await apiFetch("/admin/orders");
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const data = await response.json();
       setOrders(data.orders || []);
+      setError(null);
     } catch (err) {
-      console.error('Error fetching orders:', err);
+      console.error("Error fetching orders:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -30,199 +80,289 @@ export default function OrdersList() {
 
   async function handleUpdateOrderStatus(id, status) {
     try {
-      const response = await fetch(`/api/admin/orders/${id}`, {
-        method: 'PATCH',
+      const response = await apiFetch(`/admin/orders/${id}`, {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ status }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
 
-      // Refresh orders list
-      fetchOrders();
-      alert('Order status updated successfully');
+      showToast("success", "Order status updated");
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order._id === id ? { ...order, ...(data.order || data), status } : order,
+        ),
+      );
     } catch (err) {
-      console.error('Error updating order status:', err);
-      alert('Failed to update order status');
+      console.error("Error updating order status:", err);
+      showToast("error", err.message || "Failed to update order status");
     }
   }
 
   async function handleDeleteOrder(id) {
-    if (confirm('Are you sure you want to delete this order?')) {
-      try {
-        const response = await fetch(`/api/admin/orders/${id}`, {
-          method: 'DELETE',
-        });
+    if (!window.confirm("Are you sure you want to delete this order?")) {
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    try {
+      const response = await apiFetch(`/admin/orders/${id}`, {
+        method: "DELETE",
+      });
 
-        // Refresh orders list
-        fetchOrders();
-        alert('Order deleted successfully');
-      } catch (err) {
-        console.error('Error deleting order:', err);
-        alert('Failed to delete order');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
+
+      showToast("success", data.message || "Order deleted successfully");
+      setOrders((currentOrders) => currentOrders.filter((order) => order._id !== id));
+    } catch (err) {
+      console.error("Error deleting order:", err);
+      showToast("error", err.message || "Failed to delete order");
     }
   }
 
-  if (loading) return <div>Loading orders...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const metrics = useMemo(() => {
+    const activeOrders = orders.filter((order) =>
+      ["pending", "confirmed", "processing", "shipped"].includes(order.status || "pending"),
+    ).length;
+    const deliveredOrders = orders.filter(
+      (order) => (order.status || "pending") === "delivered",
+    ).length;
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + Number(order.totalAmount || 0),
+      0,
+    );
+
+    return {
+      totalOrders: orders.length,
+      activeOrders,
+      deliveredOrders,
+      totalRevenue,
+    };
+  }, [orders]);
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold">All Orders</h2>
-      </div>
+    <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <AdminMetric
+          label="Orders"
+          value={metrics.totalOrders}
+          detail="Wallet-store purchases in the current feed"
+          icon={ShoppingBag}
+          accent="from-sky-500/20 via-sky-500/5 to-transparent"
+        />
+        <AdminMetric
+          label="In progress"
+          value={metrics.activeOrders}
+          detail="Pending, processing, and shipped orders"
+          icon={Clock3}
+          accent="from-amber-500/20 via-amber-500/5 to-transparent"
+        />
+        <AdminMetric
+          label="Delivered"
+          value={metrics.deliveredOrders}
+          detail="Completed orders with final fulfillment"
+          icon={PackageCheck}
+          accent="from-emerald-500/20 via-emerald-500/5 to-transparent"
+        />
+        <AdminMetric
+          label="Revenue"
+          value={currencyFormatter.format(metrics.totalRevenue)}
+          detail="Gross revenue represented in this order feed"
+          icon={CircleDollarSign}
+          accent="from-fuchsia-500/20 via-fuchsia-500/5 to-transparent"
+        />
+      </section>
 
-      {orders.length === 0 ? (
-        <div className="bg-yellow-50 p-4 rounded-md text-yellow-800">
-          No orders found.
-        </div>
-      ) : (
-        <>
-          {/* Desktop view - Table */}
-          <div className="hidden lg:block w-full overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order ID
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <tr key={order._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">#{order._id.substring(0, 8)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.player?.name || 'Guest'}</div>
-                      <div className="text-sm text-gray-500">{order.player?.email || 'No email'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">${order.totalAmount.toFixed(2)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'shipped' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status || 'pending'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/admin/orders/${order._id}`} className="text-indigo-600 hover:text-indigo-900 mr-3">
+      <AdminPanel
+        title="Order feed"
+        description="Status changes, customer details, and quick actions stay together so the workflow remains readable across phones, tablets, and desktop."
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            className={adminGhostButtonClass}
+            onClick={fetchOrders}
+          >
+            <RefreshCw className="size-4" />
+            Refresh
+          </Button>
+        }
+      >
+        {loading ? (
+          <div className="py-12 text-sm text-muted-foreground">Loading orders...</div>
+        ) : error ? (
+          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+            Error: {error}
+          </div>
+        ) : orders.length === 0 ? (
+          <AdminEmptyState
+            title="No orders found"
+            description="Orders will appear here once players complete purchases through the storefront."
+          />
+        ) : (
+          <>
+            <div className={`hidden lg:block ${adminTableWrapClass}`}>
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Order</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order._id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            #{order.orderNumber || String(order._id).slice(-8).toUpperCase()}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {order.items?.length || 0} item(s)
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{getCustomerName(order.player)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {getCustomerEmail(order.player)}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{dateFormatter.format(new Date(order.createdAt))}</TableCell>
+                      <TableCell>{currencyFormatter.format(order.totalAmount || 0)}</TableCell>
+                      <TableCell>
+                        <AdminStatusBadge status={order.status || "pending"} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button asChild variant="outline" size="sm" className={adminGhostButtonClass}>
+                            <Link href={`/admin/orders/${order._id}`}>
+                              <Eye className="size-4" />
+                              <span className="hidden xl:inline">View</span>
+                            </Link>
+                          </Button>
+                          <select
+                            value={order.status || "pending"}
+                            onChange={(event) =>
+                              handleUpdateOrderStatus(order._id, event.target.value)
+                            }
+                            className={`min-w-[8rem] ${adminSelectClass}`}
+                            aria-label={`Update status for order ${order._id}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-rose-500/20 bg-rose-500/5 text-rose-700 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-300"
+                            onClick={() => handleDeleteOrder(order._id)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="grid gap-4 lg:hidden">
+              {orders.map((order) => (
+                <div
+                  key={`${order._id}-mobile`}
+                  className="rounded-[24px] border border-border/60 bg-muted/20 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">
+                        Order #{order.orderNumber || String(order._id).slice(-8).toUpperCase()}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {dateFormatter.format(new Date(order.createdAt))}
+                      </p>
+                    </div>
+                    <AdminStatusBadge status={order.status || "pending"} />
+                  </div>
+
+                  <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <p className="text-muted-foreground">Customer</p>
+                      <p className="font-medium">{getCustomerName(order.player)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {getCustomerEmail(order.player)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total</p>
+                      <p className="font-medium">
+                        {currencyFormatter.format(order.totalAmount || 0)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {order.items?.length || 0} item(s)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                    <select
+                      value={order.status || "pending"}
+                      onChange={(event) =>
+                        handleUpdateOrderStatus(order._id, event.target.value)
+                      }
+                      className={`w-full ${adminSelectClass}`}
+                      aria-label={`Update status for order ${order._id}`}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <Button asChild variant="outline" className="rounded-full">
+                      <Link href={`/admin/orders/${order._id}`}>
+                        <Truck className="size-4" />
                         View
                       </Link>
-                      <select
-                        value={order.status || 'pending'}
-                        onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md py-1 px-2 mr-3"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <button
-                        onClick={() => handleDeleteOrder(order._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile view - Cards */}
-          <div className="lg:hidden space-y-4">
-            {orders.map((order) => (
-              <div key={order._id} className="bg-white rounded-lg shadow p-4 border border-gray-200">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Order #{order._id.substring(0, 8)}</h3>
-                    <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full border-rose-500/20 bg-rose-500/5 text-rose-700 dark:text-rose-300"
+                      onClick={() => handleDeleteOrder(order._id)}
+                    >
+                      Delete
+                    </Button>
                   </div>
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                    order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'shipped' ? 'bg-yellow-100 text-yellow-800' :
-                    order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {order.status || 'pending'}
-                  </span>
                 </div>
-
-                <div className="mb-3">
-                  <p className="text-sm text-gray-900 font-medium">Customer: {order.player?.name || 'Guest'}</p>
-                  <p className="text-sm text-gray-500">{order.player?.email || 'No email'}</p>
-                  <p className="text-sm text-gray-900 font-medium mt-1">Total: ${order.totalAmount.toFixed(2)}</p>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Link
-                    href={`/admin/orders/${order._id}`}
-                    className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-4 rounded-md text-center font-medium transition-colors"
-                  >
-                    View
-                  </Link>
-                  <select
-                    value={order.status || 'pending'}
-                    onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                    className="flex-1 text-sm border border-gray-300 rounded-md py-2 px-4"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  <button
-                    onClick={() => handleDeleteOrder(order._id)}
-                    className="bg-red-50 hover:bg-red-100 text-red-700 py-2 px-4 rounded-md font-medium transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+              ))}
+            </div>
+          </>
+        )}
+      </AdminPanel>
     </div>
   );
 }

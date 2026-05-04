@@ -5,9 +5,10 @@ import axios from "axios";
 import Image from "next/image";
 import VerifiedImg from "@/public/assets/images/verified.gif";
 import VerificationFailedImg from "@/public/assets/images/verification-failed.gif";
-import { WEBSITE_HOME } from "@/routes/WebsiteRoute";
+import { WEBSITE_LOGIN } from "@/routes/WebsiteRoute";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { apiUrl, axiosWithCredentials } from "@/lib/apiClient";
 
 export default function VerifyEmailPage({ params }) {
   const resolvedParams = use(params);
@@ -22,7 +23,11 @@ export default function VerifyEmailPage({ params }) {
         // Use decodeURIComponent in case token has special characters
         const decodedToken = decodeURIComponent(token);
 
-        const { data } = await axios.post("/api/auth/verify-email", { token: decodedToken });
+        const { data } = await axios.post(
+          apiUrl("/auth/verify-email"),
+          { token: decodedToken },
+          axiosWithCredentials,
+        );
 
         setIsVerified(data.success);
         setMessage(data.message || "");
@@ -59,7 +64,7 @@ export default function VerifyEmailPage({ params }) {
           </h1>
           {message && <p className="text-center text-gray-700 mb-4">{message}</p>}
           <Button asChild>
-            <Link href={WEBSITE_HOME}>Go to Home</Link>
+            <Link href={WEBSITE_LOGIN}>Go to Login</Link>
           </Button>
         </>
       ) : (
@@ -70,7 +75,7 @@ export default function VerifyEmailPage({ params }) {
           </h1>
           {message && <p className="text-center text-gray-700 mb-4">{message}</p>}
           <Button asChild>
-            <Link href={WEBSITE_HOME}>Go to Home</Link>
+            <Link href={WEBSITE_LOGIN}>Go to Login</Link>
           </Button>
         </>
       )}

@@ -4,13 +4,112 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { NEWS_PAGE } from "@/routes/WebsiteRoute";
-import { tournamentsData } from "@/lib/data";
+import {
+  NEWS_PAGE,
+  PRIVACY_POLICY,
+  TERMS_OF_SERVICE,
+  COOKIE_POLICY,
+} from "@/routes/WebsiteRoute";
 import VideoBackground from "@/components/VideoBackground";
+import { apiFetch } from "@/lib/apiClient";
+
+const fallbackTournaments = [
+  {
+    _id: "fallback-tournament-bgmi",
+    name: "BGMI Clash Cup",
+    game: "BGMI",
+    startDate: "Jul 10, 2026",
+    endDate: "Jul 10, 2026",
+    startTime: "6:00 PM",
+    endTime: "9:00 PM",
+    prize: "Rs. 15,000",
+    currentParticipants: 42,
+    maxParticipants: 64,
+    imageUrl: "/assets/images/games/bgmi.jpg",
+  },
+  {
+    _id: "fallback-tournament-valorant",
+    name: "Valorant Blitz Cup",
+    game: "Valorant",
+    startDate: "Jul 14, 2026",
+    endDate: "Jul 14, 2026",
+    startTime: "7:00 PM",
+    endTime: "10:00 PM",
+    prize: "Rs. 20,000",
+    currentParticipants: 28,
+    maxParticipants: 32,
+    imageUrl: "/assets/images/games/valorant.webp",
+  },
+  {
+    _id: "fallback-tournament-cod",
+    name: "COD Arena Showdown",
+    game: "Call of Duty",
+    startDate: "Jul 18, 2026",
+    endDate: "Jul 18, 2026",
+    startTime: "5:00 PM",
+    endTime: "8:00 PM",
+    prize: "Rs. 12,000",
+    currentParticipants: 16,
+    maxParticipants: 24,
+    imageUrl: "/assets/images/games/cod.jpg",
+  },
+  {
+    _id: "fallback-tournament-freefire",
+    name: "Free Fire Squad Rush",
+    game: "Free Fire",
+    startDate: "Jul 21, 2026",
+    endDate: "Jul 21, 2026",
+    startTime: "4:00 PM",
+    endTime: "7:00 PM",
+    prize: "Rs. 10,000",
+    currentParticipants: 54,
+    maxParticipants: 64,
+    imageUrl: "/assets/images/games/freefire.jpg",
+  },
+];
+
+const fallbackFeaturedProducts = [
+  {
+    _id: "fallback-product-mouse",
+    name: "Professional Gaming Mouse",
+    description: "High-precision gaming mouse with RGB lighting and customizable DPI.",
+    price: 79.99,
+    image: "/assets/images/games/valorant2.jpg",
+    isFeatured: true,
+    inStock: 50,
+  },
+  {
+    _id: "fallback-product-headset",
+    name: "Gaming Headset Pro",
+    description: "Surround-sound gaming headset with a noise-cancelling microphone.",
+    price: 129.99,
+    image: "/assets/images/games/cod.jpg",
+    isFeatured: true,
+    inStock: 30,
+  },
+  {
+    _id: "fallback-product-jersey",
+    name: "Team Jersey",
+    description: "Official GameArena jersey for tournament participants.",
+    price: 59.99,
+    image: "/assets/images/GameArenaLogo.png",
+    isFeatured: false,
+    inStock: 100,
+  },
+  {
+    _id: "fallback-product-pack",
+    name: "Digital Game Pack",
+    description: "A starter digital bundle for esports players.",
+    price: 29.99,
+    image: "/assets/images/games/bgmi2.jpg",
+    isFeatured: false,
+    inStock: 999,
+  },
+];
 
 const GameArena = () => {
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const [tournaments, setTournaments] = useState([]);
+  const [tournaments, setTournaments] = useState(fallbackTournaments);
 
   // Add styles for animation
   React.useEffect(() => {
@@ -49,44 +148,39 @@ const GameArena = () => {
   useEffect(() => {
     const fetchAllTournaments = async () => {
       try {
-        // Fetch all tournaments from our API
-        const response = await fetch('/api/tournaments');
-        if (!response.ok) {
-          throw new Error('Failed to fetch tournaments');
-        }
+        const response = await apiFetch('/tournaments');
+        if (!response.ok) return;
         const data = await response.json();
-        // Extract tournaments data from response
-        const tournamentsData = data.data || data;
-        // Sort tournaments by start date (newest first)
-        const sortedTournaments = Array.isArray(tournamentsData) 
-          ? tournamentsData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+        const liveTournaments = data.data || data;
+        const sortedTournaments = Array.isArray(liveTournaments)
+          ? liveTournaments.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
           : [];
-        setTournaments(sortedTournaments);
-      } catch (error) {
-        console.error("Error fetching tournaments:", error);
-        // Set empty array if there's an error
-        setTournaments([]);
+        if (sortedTournaments.length > 0) {
+          setTournaments(sortedTournaments);
+        }
+      } catch {
+        setTournaments(fallbackTournaments);
       }
     };
     
     fetchAllTournaments();
   }, []);
 
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState(fallbackFeaturedProducts);
 
   // Load featured products from API
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await fetch('/api/products?featured=true&limit=4');
-        if (!response.ok) {
-          throw new Error('Failed to fetch featured products');
-        }
+        const response = await apiFetch('/products?featured=true&limit=4');
+        if (!response.ok) return;
         const data = await response.json();
-        setFeaturedProducts(data.products || []);
-      } catch (error) {
-        console.error("Error fetching featured products:", error);
-        setFeaturedProducts([]);
+        const liveProducts = data.products || [];
+        if (liveProducts.length > 0) {
+          setFeaturedProducts(liveProducts);
+        }
+      } catch {
+        setFeaturedProducts(fallbackFeaturedProducts);
       }
     };
 
@@ -393,9 +487,20 @@ const GameArena = () => {
                       <span className="text-xs sm:text-sm">{tournament.currentParticipants}/{tournament.maxParticipants}</span>
                     </div>
                   </div>
-                  <Button className="w-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300 text-sm sm:text-base">
-                    Register Now
-                  </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300 text-sm sm:text-base"
+                    >
+                      <Link
+                        href={
+                          String(tournament._id).startsWith("fallback-")
+                            ? "/tournaments"
+                            : `/tournaments/${tournament._id}/register`
+                        }
+                      >
+                        Register Now
+                      </Link>
+                    </Button>
                 </CardContent>
               </Card>
             ))}
@@ -652,7 +757,9 @@ const GameArena = () => {
                         asChild
                         className="w-full bg-gradient-to-r from-[#00FFAA] to-[#4F46E5] text-[#0B0F19] font-bold py-2 rounded-md hover:shadow-[0_0_20px_rgba(0,255,170,0.5)] transition-all duration-300 text-sm sm:text-base"
                       >
-                        <Link href={`/shop/${product._id}`}>View Details</Link>
+                        <Link href={String(product._id).startsWith("fallback-") ? "/shop" : `/shop/${product._id}`}>
+                          View Details
+                        </Link>
                       </Button>
                     </div>
                   </CardContent>
@@ -720,12 +827,12 @@ const GameArena = () => {
                   <div className="text-gray-400 text-sm mb-2">{news.date}</div>
                   <h3 className="text-xl font-bold mb-3 text-white">{news.title}</h3>
                   <p className="text-gray-300 mb-4">{news.teaser}</p>
-                  <a href="#" className="text-[#00FFAA] font-semibold flex items-center hover:underline">
-                    Read More
-                    <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/>
-                    </svg>
-                  </a>
+                    <Link href={NEWS_PAGE} className="text-[#00FFAA] font-semibold flex items-center hover:underline">
+                      Read More
+                      <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                      </svg>
+                    </Link>
                 </CardContent>
               </Card>
             ))}
@@ -774,18 +881,20 @@ const GameArena = () => {
                 rewards, and rise through the ranks.
               </p>
               <div className="flex space-x-4">
-                {[
-                  { name: "Discord", icon: "💬" },
-                  { name: "YouTube", icon: "📺" },
-                  { name: "Twitch", icon: "🎮" },
-                  { name: "X", icon: "🐦" },
-                ].map((social, index) => (
-                  <a
-                    key={index}
-                    href="#"
-                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-xl hover:bg-[#00FFAA]/20 hover:text-[#00FFAA] transition-all duration-300 hover:shadow-[0_0_10px_rgba(0,255,170,0.5)]"
-                    aria-label={social.name}
-                  >
+                {[ 
+                    { name: "Discord", icon: "💬", href: "https://discord.com" },
+                    { name: "YouTube", icon: "📺", href: "https://youtube.com" },
+                    { name: "Twitch", icon: "🎮", href: "https://twitch.tv" },
+                    { name: "X", icon: "🐦", href: "https://x.com" },
+                  ].map((social, index) => (
+                    <a
+                      key={index}
+                      href={social.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-xl hover:bg-[#00FFAA]/20 hover:text-[#00FFAA] transition-all duration-300 hover:shadow-[0_0_10px_rgba(0,255,170,0.5)]"
+                      aria-label={social.name}
+                    >
                     {social.icon}
                   </a>
                 ))}
@@ -798,15 +907,20 @@ const GameArena = () => {
                 Quick Links
               </h3>
               <ul className="space-y-2">
-                {["Tournaments", "Leaderboard", "Rewards", "Support"].map(
+                {[
+                  { label: "Tournaments", href: "/tournaments" },
+                  { label: "Leaderboard", href: "/leaderboard" },
+                  { label: "Rewards", href: "/rewards" },
+                  { label: "Support", href: "/support" },
+                ].map(
                   (link, index) => (
                     <li key={index}>
-                      <a
-                        href="#"
+                      <Link
+                        href={link.href}
                         className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
                       >
-                        {link}
-                      </a>
+                        {link.label}
+                      </Link>
                     </li>
                   )
                 )}
@@ -820,20 +934,20 @@ const GameArena = () => {
               </h3>
               <ul className="space-y-2">
                 {[
-                  "Cyber Strike",
-                  "Battle Legends",
-                  "Space Conquest",
-                  "Racing Thunder",
+                    { label: "BGMI", href: "/games/bgmi" },
+                    { label: "Call of Duty", href: "/games/cod" },
+                    { label: "Free Fire", href: "/games/free-fire" },
+                    { label: "Valorant", href: "/games/valorant" },
                 ].map((game, index) => (
-                  <li key={index}>
-                    <a
-                      href="#"
-                      className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
-                    >
-                      {game}
-                    </a>
-                  </li>
-                ))}
+                    <li key={index}>
+                      <Link
+                        href={game.href}
+                        className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
+                      >
+                        {game.label}
+                      </Link>
+                    </li>
+                  ))}
               </ul>
             </div>
           </div>
@@ -844,25 +958,25 @@ const GameArena = () => {
               GameArena © 2025. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
-              <a
-                href="#"
-                className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
-              >
-                Terms of Service
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
-              >
-                Cookie Policy
-              </a>
-            </div>
+                <Link
+                  href={PRIVACY_POLICY}
+                  className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  href={TERMS_OF_SERVICE}
+                  className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
+                >
+                  Terms of Service
+                </Link>
+                <Link
+                  href={COOKIE_POLICY}
+                  className="text-gray-400 hover:text-[#00FFAA] transition-colors duration-300"
+                >
+                  Cookie Policy
+                </Link>
+              </div>
           </div>
         </div>
       </footer>

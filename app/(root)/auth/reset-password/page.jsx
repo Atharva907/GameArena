@@ -23,6 +23,7 @@ import OTPVerification from '@/components/Application/OTPVerification';
 import UpdatePassword from '@/components/Application/UpdatePassword';
 import Link from 'next/link';
 import { WEBSITE_LOGIN } from '@/routes/WebsiteRoute';
+import { apiUrl, axiosWithCredentials } from '@/lib/apiClient';
 
 const ResetPassword = () => {
   const [emailVerificationLoading, setEmailVerificationLoading] = useState(false);
@@ -39,7 +40,11 @@ const ResetPassword = () => {
   const handleEmailVerification = async (values) => {
     try {
       setEmailVerificationLoading(true);
-      const { data: response } = await axios.post('/api/auth/reset-password/send-otp', values);
+      const { data: response } = await axios.post(
+        apiUrl('/auth/reset-password/send-otp'),
+        values,
+        axiosWithCredentials,
+      );
       if (!response.success) throw new Error(response.message);
 
       showToast('success', response.message);
@@ -57,10 +62,14 @@ const ResetPassword = () => {
   const handleOtpVerification = async (values) => {
     try {
       setOtpVerificationLoading(true);
-      const { data: response } = await axios.post('/api/auth/reset-password/verify-otp', {
-        ...values,
-        email: otpEmail
-      });
+      const { data: response } = await axios.post(
+        apiUrl('/auth/reset-password/verify-otp'),
+        {
+          ...values,
+          email: otpEmail
+        },
+        axiosWithCredentials,
+      );
       if (!response.success) throw new Error(response.message);
 
       showToast('success', response.message);

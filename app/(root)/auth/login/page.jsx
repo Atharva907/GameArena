@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Logo from "@/public/assets/images/GameArenaLogo.png";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +29,7 @@ import { useDispatch } from "react-redux";
 import { login } from "@/store/reducer/authReducer";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ADMIN_DASHBOARD } from "@/routes/AdminPanelRoute";
+import { apiUrl, axiosWithCredentials } from "@/lib/apiClient";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
@@ -40,6 +41,14 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [otpEmail, setOtpEmail] = useState();
 
+  const getSafeCallback = (value) => {
+    if (!value || typeof value !== "string") return null;
+    if (!value.startsWith("/")) return null;
+    if (value.startsWith("//")) return null;
+    if (value.startsWith("/auth/")) return null;
+    return value;
+  };
+
   const formSchema = zSchema
     .pick({ email: true })
     .extend({ password: z.string().min(3, "Password field is required.") });
@@ -49,10 +58,21 @@ const LoginPage = () => {
     defaultValues: { email: "", password: "" },
   });
 
+  useEffect(() => {
+    const email = searchParams.get("email");
+    if (email) {
+      form.setValue("email", email, { shouldValidate: true });
+    }
+  }, [form, searchParams]);
+
   const handleLoginSubmit = async (values) => {
     try {
       setLoading(true);
-      const { data: loginResponse } = await axios.post("/api/auth/login", values);
+      const { data: loginResponse } = await axios.post(
+        apiUrl("/auth/login"),
+        values,
+        axiosWithCredentials,
+      );
 
       if (!loginResponse.success) throw new Error(loginResponse.message);
 
@@ -60,7 +80,10 @@ const LoginPage = () => {
       form.reset();
       showToast("success", loginResponse.message);
     } catch (error) {
-      showToast("error", error.message);
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error.message;
+      showToast("error", message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -69,32 +92,35 @@ const LoginPage = () => {
   const handleOtpVerification = async (values) => {
     try {
       setOtpVerificationLoading(true);
-      const { data: otpResponse } = await axios.post("/api/auth/verify-otp", values);
+      const { data: otpResponse } = await axios.post(
+        apiUrl("/auth/verify-otp"),
+        values,
+        axiosWithCredentials,
+      );
 
       if (!otpResponse.success) throw new Error(otpResponse.message);
 
       setOtpEmail("");
       showToast("success", otpResponse.message);
       
-      // Save token to cookie for future API requests
-      console.log('Saving token to cookie:', otpResponse.data.token);
-      // Set cookie with longer expiration time (24 hours = 86400 seconds)
-      const cookieString = `token=${otpResponse.data.token}; path=/; max-age=86400`;
-      // Removed secure and samesite attributes for local development
-      document.cookie = cookieString;
-      console.log('Cookie set:', document.cookie);
-      
       dispatch(login(otpResponse.data));
 
-      if (searchParams.has("callback")) {
-        router.push(searchParams.get("callback"));
+      const callback = getSafeCallback(searchParams.get("callback"));
+
+      if (callback && (!callback.startsWith("/admin") || otpResponse.data.role === "admin")) {
+        router.push(callback);
+      } else if (callback?.startsWith("/admin")) {
+        router.push(USER_DASHBOARD);
       } else {
         otpResponse.data.role === "admin"
           ? router.push(ADMIN_DASHBOARD)
           : router.push(USER_DASHBOARD);
       }
     } catch (error) {
-      showToast("error", error.message);
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error.message;
+      showToast("error", message || "OTP verification failed");
     } finally {
       setOtpVerificationLoading(false);
     }

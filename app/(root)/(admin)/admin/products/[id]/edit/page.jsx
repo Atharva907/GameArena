@@ -1,22 +1,39 @@
-import { notFound } from 'next/navigation';
-import { connectDB } from '@/lib/databaseConnection';
-import Product from '@/models/Product';
-import ProductForm from '../../ProductForm';
+import { notFound } from "next/navigation";
+import ProductForm from "../../ProductForm";
+import {
+  AdminBackLink,
+  AdminHeader,
+  AdminPage,
+} from "@/components/Application/Admin/AdminUi";
+import { serverApiFetch } from "@/lib/serverApiClient";
 
 export default async function EditProductPage({ params }) {
   const { id } = await params;
-  await connectDB();
 
-  const product = await Product.findById(id).populate('category');
+  const response = await serverApiFetch(`/products/${id}`);
 
-  if (!product) {
+  if (response.status === 404) {
     notFound();
   }
 
+  if (!response.ok) {
+    throw new Error("Failed to load product");
+  }
+
+  const data = await response.json();
+  const product = data.product;
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
-      <ProductForm product={JSON.parse(JSON.stringify(product))} />
-    </div>
+    <AdminPage className="mx-0 max-w-none">
+      <AdminHeader
+        eyebrow="Edit Product"
+        title={`Update ${product.name}`}
+        description="Refine pricing, stock, category mapping, and imagery without leaving the standardized product workflow."
+        chips={["Catalog", "Inventory", "Edit flow"]}
+        actions={<AdminBackLink href="/admin/products">Back to Products</AdminBackLink>}
+      />
+
+      <ProductForm product={product} />
+    </AdminPage>
   );
 }

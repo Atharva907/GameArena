@@ -1,75 +1,68 @@
-# Database Setup for Tournament Management
+# GameArena Database Setup
 
-This document explains how to set up the MongoDB database for the tournament management system.
+GameArena now uses PostgreSQL with Prisma as the active runtime database.
+This document explains how to prepare the local database used by the backend
+and how to seed the initial tournament and shop data.
 
 ## Prerequisites
 
-1. MongoDB installed and running on your system
-2. Node.js and npm installed
+1. PostgreSQL 18 or compatible PostgreSQL server running on the local machine.
+2. Node.js and npm installed.
+3. The backend `.env.local` file configured with:
+   - `DATABASE_PROVIDER=postgresql`
+   - `DATABASE_URL=postgresql://gamearena:<password>@127.0.0.1:5432/gamearena?schema=public`
 
-## Setup Steps
+## Local Database Preparation
 
-1. **Install MongoDB**
-   - Download and install MongoDB from [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
-   - Start MongoDB service on your system
+1. Confirm that PostgreSQL is listening on port `5432`.
+2. Confirm that the `gamearena` database exists and that the `gamearena`
+   user has access.
+3. From the backend directory, deploy the Prisma migration:
 
-2. **Environment Configuration**
-   - The `.env.local` file has been created with the MongoDB connection string
-   - Make sure MongoDB is running at `mongodb://localhost:27017/game-arena`
-
-3. **Seed the Database**
-   - Run the following command to populate the database with initial tournament data:
-   ```
-   npm run seed
-   ```
-
-## Database Schema
-
-The tournament data is stored in the `tournaments` collection with the following schema:
-
-```javascript
-{
-  name: String,
-  game: String,
-  description: String,
-  startDate: String,
-  endDate: String,
-  startTime: String,
-  endTime: String,
-  location: String,
-  maxParticipants: Number,
-  currentParticipants: Number,
-  status: String, // "upcoming", "live", "completed"
-  prize: String,
-  rules: String,
-  imageUrl: String,
-  createdAt: Date,
-  updatedAt: Date
-}
+```bash
+npm --prefix backend run db:migrate:deploy
 ```
 
-## API Endpoints
+This applies the migration that creates the tables and constraints defined in
+`backend/prisma/schema.prisma`.
 
-The following API endpoints are available for tournament management:
+## Seeding Initial Data
 
-- `GET /api/tournaments` - Get all tournaments
-- `GET /api/tournaments?status=<status>` - Get tournaments by status
-- `POST /api/tournaments` - Create a new tournament
-- `PUT /api/tournaments` - Update a tournament
-- `DELETE /api/tournaments?id=<id>` - Delete a tournament
+Use the seed scripts after the schema is ready:
+
+```bash
+npm run seed
+npm run seed:products
+```
+
+The tournament seed populates public tournament records. The product seed
+creates the initial categories and shop items used by the storefront and
+admin panel.
+
+## Data Model Summary
+
+The PostgreSQL schema contains the following main entities:
+
+- `users` for authentication, role control, and profile ownership.
+- `players` for tournament profiles and wallet balances.
+- `tournaments` and `tournament_registrations` for competitive events.
+- `tournament_matches` for bracket and match results.
+- `products` and `categories` for the shop catalogue.
+- `orders`, `order_items`, and `order_status_history` for commerce flow.
+- `otps` for verification, login, and reset-code tracking.
+- `medias` for ImageKit-backed uploaded assets.
+- `player_transactions` for wallet movements and audit history.
 
 ## Troubleshooting
 
-1. **Connection Issues**
-   - Make sure MongoDB is running
-   - Check the connection string in `.env.local`
-   - Verify the database name is correct
+1. **Connection fails**
+   - Verify `DATABASE_URL` points to the local PostgreSQL server.
+   - Confirm the PostgreSQL service is running.
 
-2. **Data Not Showing**
-   - Run the seed script to populate initial data
-   - Check the browser console for any errors
-   - Verify the API endpoints are working correctly
+2. **Schema push fails**
+   - Make sure the database exists and the user in `DATABASE_URL` can create
+     tables and indexes.
 
-3. **Edit/Delete Not Working**
-   - Make sure you're using the correct `_id` field from MongoDB
-   - Check the network tab in browser developer tools for API errors
+3. **Seed scripts skip data**
+   - The scripts skip inserts when data already exists. Delete the records or
+     use a fresh database if a clean reseed is required.
