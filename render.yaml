@@ -64,7 +64,7 @@ services:
       - key: NEXT_PUBLIC_BASE_URL
         value: https://gamearena-frontend.onrender.com
       - key: NEXT_PUBLIC_API_URL
-        value: https://gamearena-backend.onrender.com/api
+        value: https://gamearena-backend-6g16.onrender.com/api
       - key: NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
         sync: false
       - key: NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
