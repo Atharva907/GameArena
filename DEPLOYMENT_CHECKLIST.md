@@ -11,6 +11,7 @@ This checklist is used for the final project handoff after Phase 6.
   - Frontend: `gamearena-frontend`
   - Backend: `gamearena-backend`
   - Database: `gamearena-postgres`
+- The committed Blueprint uses Render free plans. Free Render PostgreSQL expires after 30 days, so do not treat it as permanent production storage.
 - Configure the database connection:
   - `DATABASE_PROVIDER=postgresql`
   - `DATABASE_URL=postgresql://gamearena:<password>@127.0.0.1:5432/gamearena?schema=public`
