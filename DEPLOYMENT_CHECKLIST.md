@@ -6,6 +6,11 @@ This checklist is used for the final project handoff after Phase 6.
 
 - Copy `.env.example` to `.env.local` for local development.
 - Set a long random `SECRET_KEY` of at least 32 characters.
+- For Render deployment, use the committed `render.yaml` Blueprint. The old Vercel config has been removed.
+- Keep frontend and backend as separate Render web services:
+  - Frontend: `gamearena-frontend`
+  - Backend: `gamearena-backend`
+  - Database: `gamearena-postgres`
 - Configure the database connection:
   - `DATABASE_PROVIDER=postgresql`
   - `DATABASE_URL=postgresql://gamearena:<password>@127.0.0.1:5432/gamearena?schema=public`
@@ -26,6 +31,7 @@ npm run validate:env:production
 ## 2. Database
 
 - Confirm the PostgreSQL service or hosted database is reachable from the backend runtime.
+- On Render, `DATABASE_URL` is injected into the backend from the `gamearena-postgres` database.
 - Run the Prisma migration deploy if the database is empty:
 
 ```bash
@@ -33,7 +39,8 @@ npm --prefix backend run db:migrate:deploy
 ```
 
 When using Docker Compose, the `migrate` service applies this step automatically
-before the backend service starts.
+before the backend service starts. On Render, the backend `preDeployCommand`
+applies migrations before the service starts.
 
 - Run the seed scripts if the database is empty:
 
@@ -92,3 +99,7 @@ npm run test:smoke
 The PostgreSQL service must allow the deployment runtime to connect. If it does not,
 admin overview prerendering and `/api/health` will report database connection errors
 even when the application build succeeds.
+
+Render deployment requires the ImageKit and Nodemailer secrets to be filled after
+the Blueprint is created. They are intentionally marked `sync: false` in
+`render.yaml` so secrets are not committed.

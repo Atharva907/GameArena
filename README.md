@@ -87,6 +87,46 @@ npm run docker:up
 
 That starts PostgreSQL, the backend API, and the frontend app. The companion commands are `npm run docker:build`, `npm run docker:logs`, and `npm run docker:down`.
 
+## Render Deployment
+
+The repository is ready for separate Render services through `render.yaml`:
+
+- `gamearena-backend`: Express API from `backend/`
+- `gamearena-frontend`: Next.js frontend from the repository root
+- `gamearena-postgres`: managed PostgreSQL database
+
+Use Render Blueprints from this repository. The backend runs Prisma migrations with `npm run db:migrate:deploy` before each deploy.
+
+Default deployed URLs expected by `render.yaml`:
+
+```text
+Frontend: https://gamearena-frontend.onrender.com
+Backend: https://gamearena-backend.onrender.com/api
+Health: https://gamearena-backend.onrender.com/api/health
+```
+
+If you rename either Render service, update these variables in Render before deploying:
+
+```text
+Frontend service:
+NEXT_PUBLIC_BASE_URL=https://your-frontend-service.onrender.com
+NEXT_PUBLIC_API_URL=https://your-backend-service.onrender.com/api
+
+Backend service:
+FRONTEND_ORIGIN=https://your-frontend-service.onrender.com
+```
+
+Set these secret values in Render after creating the Blueprint:
+
+```text
+NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
+IMAGEKIT_PRIVATE_KEY
+NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+NODEMAILER_HOST
+NODEMAILER_EMAIL
+NODEMAILER_PASSWORD
+```
+
 ## Verification
 
 Run lint:
@@ -134,7 +174,7 @@ It reports app, database, mail, and ImageKit readiness. A `503` response means t
 
 ## Deployment Notes
 
-- Deploy the frontend and backend as separate services.
+- Deploy the frontend and backend as separate services. The committed `render.yaml` is the active deployment config.
 - Configure `NEXT_PUBLIC_API_URL` in the frontend to point to the backend `/api` URL.
 - Configure `FRONTEND_ORIGIN` in the backend to the deployed frontend origin.
 - Configure all production environment variables in the appropriate hosting service.

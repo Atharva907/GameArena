@@ -25,7 +25,6 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^4.21.2",
-    "gamearena": "file:..",
     "jose": "^6.1.0",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
