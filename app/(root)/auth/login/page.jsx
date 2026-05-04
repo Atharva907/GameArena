@@ -81,7 +81,9 @@ const LoginPage = () => {
       showToast("success", loginResponse.message);
     } catch (error) {
       const message = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.message
+        ? error.code === "ECONNABORTED"
+          ? "Login is taking too long. The backend may still be waking up or the mail service is not responding. Please try again."
+          : error.response?.data?.message || error.message
         : error.message;
       showToast("error", message || "Login failed");
     } finally {
@@ -118,7 +120,9 @@ const LoginPage = () => {
       }
     } catch (error) {
       const message = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.message
+        ? error.code === "ECONNABORTED"
+          ? "OTP verification is taking too long. Please try again."
+          : error.response?.data?.message || error.message
         : error.message;
       showToast("error", message || "OTP verification failed");
     } finally {
@@ -178,7 +182,12 @@ const LoginPage = () => {
                         <FormItem className="mb-5">
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="example@gmail.com" {...field} />
+                            <Input
+                              type="email"
+                              autoComplete="email"
+                              placeholder="example@gmail.com"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -196,6 +205,7 @@ const LoginPage = () => {
                             <FormControl>
                               <Input
                                 type={showPassword ? "text" : "password"}
+                                autoComplete="current-password"
                                 placeholder="********"
                                 {...field}
                               />

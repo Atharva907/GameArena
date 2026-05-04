@@ -73,7 +73,9 @@ const OTPVerification = ({ email, onSubmit, loading }) => {
       showToast('success', resendOtpResponse.message)
     } catch (error) {
       const message = axios.isAxiosError(error)
-        ? error.response?.data?.message || error.message
+        ? error.code === 'ECONNABORTED'
+          ? 'Resending OTP is taking too long. Please try again.'
+          : error.response?.data?.message || error.message
         : error.message
       showToast('error', message || 'Failed to resend OTP')
     } finally {
