@@ -40,6 +40,8 @@ services:
         value: "465"
       - key: NODEMAILER_SECURE
         value: "true"
+      - key: NODEMAILER_SERVICE
+        value: gmail
       - key: NODEMAILER_EMAIL
         sync: false
       - key: NODEMAILER_PASSWORD

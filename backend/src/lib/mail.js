@@ -2,7 +2,12 @@ import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
 
 export async function sendMail(subject, receiver, html) {
-  if (!env.mail.email || !env.mail.password || (!env.mail.host && !env.mail.service)) {
+  const email = String(env.mail.email || "").trim();
+  const password = String(env.mail.password || "").replace(/\s+/g, "");
+  const host = String(env.mail.host || "").trim();
+  const service = String(env.mail.service || "").trim();
+
+  if (!email || !password || (!host && !service)) {
     return {
       success: false,
       message: "Mail service is not configured.",
@@ -15,25 +20,23 @@ export async function sendMail(subject, receiver, html) {
     greetingTimeout: 8000,
     socketTimeout: 10000,
     auth: {
-      user: env.mail.email,
-      pass: env.mail.password,
+      user: email,
+      pass: password,
     },
   };
 
-  if (env.mail.service) {
-    transporterConfig.service = env.mail.service;
-  }
-
-  if (env.mail.host) {
-    transporterConfig.host = env.mail.host;
+  if (host) {
+    transporterConfig.host = host;
     transporterConfig.port = env.mail.port;
+  } else if (service) {
+    transporterConfig.service = service;
   }
 
   const transporter = nodemailer.createTransport(transporterConfig);
 
   try {
     await transporter.sendMail({
-      from: `"GameArena" <${env.mail.email}>`,
+      from: `"GameArena" <${email}>`,
       to: receiver,
       subject,
       html,
