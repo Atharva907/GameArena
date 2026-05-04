@@ -97,6 +97,7 @@ The repository is ready for separate Render services through `render.yaml`:
 
 Use Render Blueprints from this repository. The backend runs Prisma migrations with `npm run db:migrate:deploy` before each deploy.
 The Blueprint uses Render free plans. Render free PostgreSQL is intended for demos and expires after 30 days, so export or reseed data before it expires.
+Render builds with Node.js 22 and installs build-time dependencies explicitly so the Next.js Tailwind/PostCSS build and Prisma migration command are available.
 
 Default deployed URLs expected by `render.yaml`:
 
