@@ -82,7 +82,7 @@ const LoginPage = () => {
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.code === "ECONNABORTED"
-          ? "Login is taking too long. The backend may still be waking up or the mail service is not responding. Please try again."
+          ? "Login is taking too long. The backend may still be waking up on Render. Please try again in a minute."
           : error.response?.data?.message || error.message
         : error.message;
       showToast("error", message || "Login failed");
@@ -121,7 +121,7 @@ const LoginPage = () => {
     } catch (error) {
       const message = axios.isAxiosError(error)
         ? error.code === "ECONNABORTED"
-          ? "OTP verification is taking too long. Please try again."
+          ? "OTP verification is taking too long. Please try again in a minute."
           : error.response?.data?.message || error.message
         : error.message;
       showToast("error", message || "OTP verification failed");
